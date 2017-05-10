@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WTG.BulkAnalysis.Runner", "WTG.BulkAnalysis.Runner\WTG.BulkAnalysis.Runner.csproj", "{CC915472-4531-448B-8D01-9FD9D036D451}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WTG.BulkAnalysis.Core", "WTG.BulkAnalysis.Core\WTG.BulkAnalysis.Core.csproj", "{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CC915472-4531-448B-8D01-9FD9D036D451}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC915472-4531-448B-8D01-9FD9D036D451}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC915472-4531-448B-8D01-9FD9D036D451}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC915472-4531-448B-8D01-9FD9D036D451}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://tfs.wtg.zone:8080/tfs/cargowise
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = BulkAnalysisRunner\\BulkAnalysisRunner.csproj
+		SccProjectName1 = BulkAnalysisRunner
+		SccLocalPath1 = BulkAnalysisRunner
+		SccProjectUniqueName2 = WTG.BulkAnalysis.Core\\WTG.BulkAnalysis.Core.csproj
+		SccProjectName2 = WTG.BulkAnalysis.Core
+		SccLocalPath2 = WTG.BulkAnalysis.Core
+	EndGlobalSection
+EndGlobal

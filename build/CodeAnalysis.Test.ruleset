@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="WTGRuleSet" ToolsVersion="14.0">
+	<Include Path="CodeAnalysis.ruleset" Action="Default" />
+
+	<Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+		<Rule Id="CA1031" Action="None" />
+		<Rule Id="CA1811" Action="None" />
+		<Rule Id="CA1812" Action="None" />
+		<Rule Id="CA1822" Action="None" />
+	</Rules>
+</RuleSet>

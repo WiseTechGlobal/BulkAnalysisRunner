@@ -1,0 +1,203 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.MSBuild;
+
+namespace WTG.BulkAnalysis.Core
+{
+	struct SolutionProcessor
+	{
+		public SolutionProcessor(RunContext context, AnalyzerCache cache, MSBuildWorkspace workspace, Func<string[], int> pendEdit)
+		{
+			this.context = context;
+			this.cache = cache;
+			this.workspace = workspace;
+			this.pendEdit = pendEdit;
+		}
+
+		public async Task ProcessSolutionAsync()
+		{
+			var operationsCounter = 0;
+			var numPreviousDiagnostics = 0;
+			var reported = false;
+
+			do
+			{
+				var solution = workspace.CurrentSolution;
+				var analyzers = cache.GetAnalyzers(solution);
+
+				if (analyzers.Length == 0)
+				{
+					context.Log.WriteLine("  - No analyzers! Moving on to next solution...");
+					break;
+				}
+
+				var diagnostics = await GetAnalyzerDiagnosticsAsync(solution, analyzers).ConfigureAwait(false);
+				var numDiagnostics = diagnostics.Sum(kvp => kvp.Value.Length);
+
+				if (!reported)
+				{
+					context.Reporter?.Report(solution, diagnostics);
+				}
+
+				if (numDiagnostics == 0)
+				{
+					context.Log.WriteLine("  - No diagnostics! Moving on to next solution...");
+					break;
+				}
+				else if (numPreviousDiagnostics == numDiagnostics)
+				{
+					context.Log.WriteLine("  - Previous run did not apply changes. Moving on to next solution...");
+					break;
+				}
+
+				numPreviousDiagnostics = numDiagnostics;
+
+				if (!context.ApplyFixes)
+				{
+					break;
+				}
+
+				var count = await ApplyFixesAsync(solution, diagnostics).ConfigureAwait(false);
+				operationsCounter += count;
+
+				if (count == 0)
+				{
+					break;
+				}
+			}
+			while (true);
+
+			if (context.ApplyFixes)
+			{
+				context.Log.WriteFormatted($"  - Applied {operationsCounter} fix-all operations to resolve errors.");
+			}
+		}
+
+		async Task<int> ApplyFixesAsync(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)
+		{
+			var count = 0;
+
+			foreach (var provider in GetApplicableFixProviders(solution, diagnostics))
+			{
+				var equivalenceGroups = await CodeFixEquivalenceGroup.CreateAsync(
+					provider,
+					diagnostics,
+					solution,
+					context.CancellationToken).ConfigureAwait(false);
+
+				foreach (var equivalence in equivalenceGroups)
+				{
+					var filenames = equivalence
+						.DocumentDiagnosticsToFix.SelectMany(d => d.Value)
+						.Select(diag => diag.Key)
+						.Distinct()
+						.ToArray();
+
+					pendEdit(filenames);
+
+					var operations = await equivalence
+						.GetOperationsAsync(context.CancellationToken)
+						.ConfigureAwait(false);
+
+					context.Log.WriteFormatted($"  - Applying {operations.Length} operations to resolve {equivalence.NumberOfDiagnostics} errors...");
+
+					foreach (var operation in operations)
+					{
+						operation.Apply(workspace, context.CancellationToken);
+					}
+
+					count += operations.Length;
+				}
+			}
+
+			return count;
+		}
+
+		async Task<ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>>> GetAnalyzerDiagnosticsAsync(Solution solution, ImmutableArray<DiagnosticAnalyzer> analyzers)
+		{
+			var projectDiagnosticTasks = new List<KeyValuePair<ProjectId, Task<ImmutableArray<Diagnostic>>>>();
+
+			foreach (var project in solution.Projects)
+			{
+				if (project.Language != LanguageNames.CSharp)
+				{
+					continue;
+				}
+
+				var task = GetProjectAnalyzerDiagnosticsAsync(project, analyzers);
+				projectDiagnosticTasks.Add(new KeyValuePair<ProjectId, Task<ImmutableArray<Diagnostic>>>(project.Id, task));
+			}
+
+			var projectDiagnosticBuilder = ImmutableDictionary.CreateBuilder<ProjectId, ImmutableArray<Diagnostic>>();
+
+			foreach (var task in projectDiagnosticTasks)
+			{
+				projectDiagnosticBuilder.Add(task.Key, await task.Value.ConfigureAwait(false));
+			}
+
+			return projectDiagnosticBuilder.ToImmutable();
+		}
+
+		async Task<ImmutableArray<Diagnostic>> GetProjectAnalyzerDiagnosticsAsync(Project project, ImmutableArray<DiagnosticAnalyzer> analyzers)
+		{
+			var modifiedSpecificDiagnosticOptions = project
+				.CompilationOptions
+				.SpecificDiagnosticOptions
+				.Add("AD0001", ReportDiagnostic.Error);
+
+			var modifiedCompilationOptions = project
+				.CompilationOptions
+				.WithSpecificDiagnosticOptions(modifiedSpecificDiagnosticOptions);
+
+			var compilation = await project
+				.WithCompilationOptions(modifiedCompilationOptions)
+				.GetCompilationAsync(context.CancellationToken)
+				.ConfigureAwait(false);
+
+			var compilationWithAnalyzers = compilation
+				.WithAnalyzers(
+					analyzers,
+					EmptyCompilationWithAnalyzersOptions);
+
+			var diagnostics = await compilationWithAnalyzers
+				.GetAllDiagnosticsAsync(context.CancellationToken)
+				.ConfigureAwait(false);
+
+			var ruleIds = context.RuleIds;
+
+			return diagnostics
+				.Where(d => ruleIds.Contains(d.Id))
+				.ToImmutableArray();
+		}
+
+		IEnumerable<CodeFixProvider> GetApplicableFixProviders(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)
+		{
+			var codeFixProviders = cache.GetAllCodeFixProviders(solution);
+
+			return diagnostics
+				.SelectMany(x => x.Value.Select(y => y.Id))
+				.Distinct()
+				.SelectMany(x => ImmutableDictionary.GetValueOrDefault(codeFixProviders, x, EmptyCodeFixProviderList))
+				.Distinct();
+		}
+
+		static readonly ImmutableList<CodeFixProvider> EmptyCodeFixProviderList = ImmutableList.Create<CodeFixProvider>();
+
+		static readonly CompilationWithAnalyzersOptions EmptyCompilationWithAnalyzersOptions = new CompilationWithAnalyzersOptions(
+			new AnalyzerOptions(ImmutableArray.Create<AdditionalText>()),
+			null,
+			true,
+			false);
+
+		readonly RunContext context;
+		readonly AnalyzerCache cache;
+		readonly MSBuildWorkspace workspace;
+		readonly Func<string[], int> pendEdit;
+	}
+}
