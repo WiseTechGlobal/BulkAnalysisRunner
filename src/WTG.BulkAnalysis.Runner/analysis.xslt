@@ -14,6 +14,8 @@
 			</head>
 			<body>
 				<h1>Analysis Results</h1>
+				<xsl:value-of select="count(r:report/r:solution/r:project/r:file/r:diagnostic)" /> failures.<br />
+				<xsl:value-of select="count(r:report/r:solution/r:project/r:file)" /> files.<br />
 				<ul>
 					<xsl:apply-templates select="r:report/r:solution[r:project/r:file]" />
 				</ul>
@@ -26,6 +28,9 @@
 			<xsl:call-template name="filename">
 				<xsl:with-param name="sub" select="@path" />
 			</xsl:call-template>
+			<xsl:text> (</xsl:text>
+			<xsl:value-of select="count(r:project/r:file/r:diagnostic)" />
+			<xsl:text> failures)</xsl:text>
 
 			<ul>
 				<xsl:apply-templates select="r:project[r:file]" />
@@ -36,6 +41,9 @@
 	<xsl:template match="r:project">
 		<li>
 			<xsl:value-of select="@name" />
+			<xsl:text> (</xsl:text>
+			<xsl:value-of select="count(r:file/r:diagnostic)" />
+			<xsl:text> failures)</xsl:text>
 
 			<ul>
 				<xsl:apply-templates select="r:file/r:diagnostic" />
