@@ -42,6 +42,7 @@ namespace WTG.BulkAnalysis.Runner
 						CreateFilter(value),
 						value.Fix,
 						ImmutableHashSet.CreateRange(value.RuleIDs),
+						value.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
 						ConsoleLog.Instance,
 						reportGenerator,
 						cancellationToken);

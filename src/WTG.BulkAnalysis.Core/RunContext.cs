@@ -12,6 +12,7 @@ namespace WTG.BulkAnalysis.Core
 			Func<string, bool> solutionFilter,
 			bool applyFixes,
 			ImmutableHashSet<string> ruleIds,
+			ImmutableArray<string> loadList,
 			ILog log,
 			IReportGenerator reporter,
 			CancellationToken cancellationToken)
@@ -21,6 +22,7 @@ namespace WTG.BulkAnalysis.Core
 			SolutionFilter = solutionFilter;
 			ApplyFixes = applyFixes;
 			RuleIds = ruleIds;
+			LoadList = loadList;
 			Log = log;
 			Reporter = reporter;
 			CancellationToken = cancellationToken;
@@ -31,6 +33,7 @@ namespace WTG.BulkAnalysis.Core
 		public Func<string, bool> SolutionFilter { get; }
 		public bool ApplyFixes { get; }
 		public ImmutableHashSet<string> RuleIds { get; }
+		public ImmutableArray<string> LoadList { get; }
 		public ILog Log { get; }
 		public IReportGenerator Reporter { get; }
 		public CancellationToken CancellationToken { get; }

@@ -26,7 +26,7 @@ namespace WTG.BulkAnalysis.Core
 			var solutionPaths = GetSolutionPaths(context);
 			var counter = 0;
 			var numSolutions = solutionPaths.Count;
-			var cache = new AnalyzerCache(context.RuleIds);
+			var cache = AnalyzerCache.Create(context.RuleIds, context.LoadList);
 
 			using (var tfs = new TfsTeamProjectCollection(context.TfsServer))
 			{

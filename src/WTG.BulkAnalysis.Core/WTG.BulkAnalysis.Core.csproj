@@ -129,7 +129,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunContext.cs" />
     <Compile Include="Internal\SolutionProcessor.cs" />
-    <Compile Include="Internal\SolutionUtils.cs" />
     <Compile Include="Internal\TesterDiagnosticProvider.cs" />
   </ItemGroup>
   <ItemGroup />
