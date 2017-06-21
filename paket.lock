@@ -101,7 +101,6 @@ NUGET
       System.IdentityModel.Tokens.Jwt (>= 4.0.2.206221351)
       WindowsAzure.ServiceBus (>= 3.3.2)
     Newtonsoft.Json (10.0.3)
-    NUnit (3.7.1)
     StyleCop.Analyzers (1.0.2)
     System.AppContext (4.3)
     System.Collections (4.3)
@@ -155,5 +154,9 @@ NUGET
   remote: \\sydco-sdts-2.wtg.zone\ThirdParty\NuGet-HomeGrown
     Dat.Integration (17.6.10.4)
     WTG.Analyzers (1.2.5)
+    WTG.BuildConfiguration.Analysis (1.0.1)
+      StyleCop.Analyzers (>= 1.0.2)
+      WTG.Analyzers (>= 1.2.5)
+    WTG.BuildConfiguration.Build (1.0.0)
     WTG.DevTools.Common (17.6.15.16)
       Dat.Integration (>= 1.0)

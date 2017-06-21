@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="WTGRuleSet" ToolsVersion="14.0">
-  <Include Path="CargoWiseRuleSet.Common.ruleset" Action="Default" />
-  <Include Path="StyleCopAnalyzers.ruleset" Action="Default" />
+<RuleSet Name="Bulk Analysis Ruleset" ToolsVersion="14.0">
+  <Include Path="..\packages\WTG.BuildConfiguration.Analysis\buildcomponents\WTGRuleSet.ruleset" Action="Default" />
   <Include Path="..\packages\WTG.Analyzers\build\WarnAll.ruleset" Action="Default" />
 
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">

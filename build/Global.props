@@ -1,2 +1,23 @@
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<WTGBranchRoot>$(MSBuildThisFileDirectory)..</WTGBranchRoot>
+		<WTGPaketPackagesRoot>$(WTGBranchRoot)\packages</WTGPaketPackagesRoot>
+
+		<IsTestProject Condition="$(MSBuildProjectFile.Contains('.Test.'))">True</IsTestProject>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<RunCodeAnalysis>true</RunCodeAnalysis>
+	</PropertyGroup>
+
+	<PropertyGroup  Condition="'$(IsTestProject)' != 'True'">
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+
+	<PropertyGroup  Condition="'$(IsTestProject)' == 'True'">
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\CodeAnalysis.Test.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+
+	<Import Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.props" />
+	<Import Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Analysis\build\WTG.BuildConfiguration.Analysis.props" />
 </Project>

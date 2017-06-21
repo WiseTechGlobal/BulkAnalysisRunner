@@ -23,9 +23,9 @@ framework: net46
 # DO NOT UPDATE paket.lock BY HAND!
 #
 
-nuget NUnit
 nuget stylecop.analyzers
-nuget WTG.Analyzers
+nuget WTG.BuildConfiguration.Build
+nuget WTG.BuildConfiguration.Analysis
 nuget WTG.DevTools.Common
 nuget CommandLineParser 2.1.1-beta
 
