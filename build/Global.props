@@ -2,20 +2,33 @@
 	<PropertyGroup>
 		<WTGBranchRoot>$(MSBuildThisFileDirectory)..</WTGBranchRoot>
 		<WTGPaketPackagesRoot>$(WTGBranchRoot)\packages</WTGPaketPackagesRoot>
+		<MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
 
-		<IsTestProject Condition="$(MSBuildProjectFile.Contains('.Test.'))">True</IsTestProject>
+		<WTGIsTestProject Condition="$(MSBuildProjectFile.Contains('.Test.'))">True</WTGIsTestProject>
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<RunCodeAnalysis>true</RunCodeAnalysis>
+
+		<Version>2.0.0.0</Version>
+
+		<Company>WiseTech Global Pty Ltd</Company>
+		<Product>Bulk Analysis Runner</Product>
+		<Copyright>Copyright © WiseTech Global 2016-2017</Copyright>
+		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<FileVersion>$(Version)</FileVersion>
 	</PropertyGroup>
 
-	<PropertyGroup  Condition="'$(IsTestProject)' != 'True'">
+	<PropertyGroup  Condition="'$(WTGIsTestProject)' != 'True'">
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
 
-	<PropertyGroup  Condition="'$(IsTestProject)' == 'True'">
+	<PropertyGroup  Condition="'$(WTGIsTestProject)' == 'True'">
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\CodeAnalysis.Test.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(RunCodeAnalysis)' == 'True'">
+		<DebugType>full</DebugType>
 	</PropertyGroup>
 
 	<Import Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.props" />

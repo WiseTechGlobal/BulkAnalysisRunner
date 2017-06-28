@@ -4,7 +4,7 @@
 		<Solution Filename="src\BulkAnalysisRunner.sln" />
 	</Solutions>
 	<PreBuild>
-		<Command cacheable="false">paket.exe restore</Command>
+		<Command cacheable="false">.paket\paket.exe restore</Command>
 	</PreBuild>
 	<BuildConfigurations>
 		<Configuration BuildOnDat="true" TestOnDat="true">DEBUG</Configuration>

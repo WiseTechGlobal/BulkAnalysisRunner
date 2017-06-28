@@ -7,6 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WTG.BulkAnalysis.Runner", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WTG.BulkAnalysis.Core", "WTG.BulkAnalysis.Core\WTG.BulkAnalysis.Core.csproj", "{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AC67A789-AFFD-47CA-942F-C24CB13D8DD2}"
+	ProjectSection(SolutionItems) = preProject
+		..\build\CodeAnalysis.ruleset = ..\build\CodeAnalysis.ruleset
+		..\build\Global.props = ..\build\Global.props
+		..\build\Global.targets = ..\build\Global.targets
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,11 +37,11 @@ Global
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = http://tfs.wtg.zone:8080/tfs/cargowise
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = BulkAnalysisRunner\\BulkAnalysisRunner.csproj
-		SccProjectName1 = BulkAnalysisRunner
-		SccLocalPath1 = BulkAnalysisRunner
-		SccProjectUniqueName2 = WTG.BulkAnalysis.Core\\WTG.BulkAnalysis.Core.csproj
-		SccProjectName2 = WTG.BulkAnalysis.Core
-		SccLocalPath2 = WTG.BulkAnalysis.Core
+		SccProjectUniqueName1 = WTG.BulkAnalysis.Core\\WTG.BulkAnalysis.Core.csproj
+		SccProjectName1 = WTG.BulkAnalysis.Core
+		SccLocalPath1 = WTG.BulkAnalysis.Core
+		SccProjectUniqueName2 = WTG.BulkAnalysis.Runner\\WTG.BulkAnalysis.Runner.csproj
+		SccProjectName2 = WTG.BulkAnalysis.Runner
+		SccLocalPath2 = WTG.BulkAnalysis.Runner
 	EndGlobalSection
 EndGlobal
