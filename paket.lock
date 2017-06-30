@@ -65,7 +65,7 @@ NUGET
       Microsoft.Composition (>= 1.0.27)
     Microsoft.Composition (1.0.31)
       System.Composition (>= 1.0.31)
-    Microsoft.IdentityModel.Clients.ActiveDirectory (3.14)
+    Microsoft.IdentityModel.Clients.ActiveDirectory (3.14.1)
     Microsoft.IdentityModel.Logging (1.1.4)
     Microsoft.IdentityModel.Tokens (5.1.4)
       Microsoft.IdentityModel.Logging (>= 1.1.4)
@@ -168,7 +168,7 @@ NUGET
     WindowsAzure.ServiceBus (4.1.2)
   remote: \\sydco-sdts-2.wtg.zone\ThirdParty\NuGet-HomeGrown
     Dat.Integration (17.6.10.4)
-    WTG.Analyzers (1.2.6)
+    WTG.Analyzers (2.0.2)
     WTG.BuildConfiguration.Analysis (1.0.1)
       StyleCop.Analyzers (>= 1.0.2)
       WTG.Analyzers (>= 1.2.5)
