@@ -192,5 +192,5 @@ NUGET
       StyleCop.Analyzers (>= 1.0.2)
       WTG.Analyzers (>= 1.2.5)
     WTG.BuildConfiguration.Build (1.0.0)
-    WTG.DevTools.Common (17.4.19.5)
+    WTG.DevTools.Common (17.6.15.16)
       Dat.Integration (>= 1.0)
