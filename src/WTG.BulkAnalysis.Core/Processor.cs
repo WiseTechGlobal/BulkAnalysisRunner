@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +11,12 @@ namespace WTG.BulkAnalysis.Core
 {
 	public static class Processor
 	{
-		public static async Task ProcessAsync(RunContext context)
+		public static Task ProcessAsync(RunContext context)
+		{
+			return ProcessAsync(context, GetSolutionPaths(context));
+		}
+
+		static async Task ProcessAsync(RunContext context, ImmutableArray<string> solutionPaths)
 		{
 			context.Log.WriteLine("Rule IDs:");
 
@@ -21,9 +27,8 @@ namespace WTG.BulkAnalysis.Core
 
 			context.Log.WriteLine();
 
-			var solutionPaths = GetSolutionPaths(context);
 			var counter = 0;
-			var numSolutions = solutionPaths.Count;
+			var numSolutions = solutionPaths.Length;
 			var cache = AnalyzerCache.Create(context.RuleIds, context.LoadList);
 
 			foreach (var solutionPath in solutionPaths)
@@ -32,8 +37,7 @@ namespace WTG.BulkAnalysis.Core
 
 				using (var workspace = MSBuildWorkspace.Create())
 				{
-					var solutionFullPath = Path.GetFullPath(Path.Combine(context.PathToBranch, solutionPath));
-					var solution = await workspace.OpenSolutionAsync(solutionFullPath, context.CancellationToken).ConfigureAwait(false);
+					var solution = await workspace.OpenSolutionAsync(solutionPath, context.CancellationToken).ConfigureAwait(false);
 					var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
 
 					if (csharpProjects.Length == 0)
@@ -53,17 +57,47 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		static IList<string> GetSolutionPaths(RunContext context)
+		static ImmutableArray<string> GetSolutionPaths(RunContext context)
 		{
-			var buildXml = BuildXmlFile.Deserialize(Path.Combine(context.PathToBranch, BuildXmlFile.FileName));
-			var solutionPaths = buildXml.Solutions.Select(x => x.Filename);
+			var pathToBranch = Path.GetFullPath(context.PathToBranch);
+			var (buildXml, path) = LocateBuildXml(pathToBranch);
+
+			var solutionPaths =
+				from solution in buildXml.Solutions
+				let solutionPath = Path.GetFullPath(Path.Combine(path, solution.Filename))
+				where solutionPath.StartsWith(pathToBranch, StringComparison.InvariantCultureIgnoreCase)
+				select solutionPath;
 
 			if (context.SolutionFilter != null)
 			{
 				solutionPaths = solutionPaths.Where(context.SolutionFilter);
 			}
 
-			return solutionPaths.ToList();
+			return solutionPaths.ToImmutableArray();
+		}
+
+		static (BuildXml buildXml, string path) LocateBuildXml(string pathToBranch)
+		{
+			while (true)
+			{
+				var buildXmlPath = Path.Combine(pathToBranch, BuildXmlFile.FileName);
+
+				try
+				{
+					var buildXml = BuildXmlFile.Deserialize(buildXmlPath);
+					return (buildXml, pathToBranch);
+				}
+				catch (FileNotFoundException)
+				{
+				}
+
+				pathToBranch = Path.GetDirectoryName(pathToBranch);
+
+				if (pathToBranch == null)
+				{
+					throw new InvalidConfigurationException("Build.xml could be found.");
+				}
+			}
 		}
 	}
 }
