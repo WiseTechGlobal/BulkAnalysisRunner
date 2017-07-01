@@ -35,17 +35,9 @@ namespace WTG.BulkAnalysis.Runner
 			if (value != null)
 			{
 				using (var reportGenerator = OpenReporter(value))
+				using (var versionControl = TfsVersionControl.Create(new Uri(value.ServerUrl, UriKind.Absolute), value.Path))
 				{
-					var context = new RunContext(
-						value.Path,
-						new Uri(value.ServerUrl, UriKind.Absolute),
-						CreateFilter(value),
-						value.Fix,
-						ImmutableHashSet.CreateRange(value.RuleIDs),
-						value.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
-						ConsoleLog.Instance,
-						reportGenerator,
-						cancellationToken);
+					var context = NewContext(value, reportGenerator, versionControl, cancellationToken);
 
 					var sw = new Stopwatch();
 					sw.Start();
@@ -70,6 +62,20 @@ namespace WTG.BulkAnalysis.Runner
 					}
 				}
 			}
+		}
+
+		static RunContext NewContext(CommandLineArgs value, XmlReportGenerator reportGenerator, TfsVersionControl versionControl, CancellationToken cancellationToken)
+		{
+			return new RunContext(
+				value.Path,
+				versionControl,
+				CreateFilter(value),
+				value.Fix,
+				ImmutableHashSet.CreateRange(value.RuleIDs),
+				value.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
+				ConsoleLog.Instance,
+				reportGenerator,
+				cancellationToken);
 		}
 
 		static XmlReportGenerator OpenReporter(CommandLineArgs value)

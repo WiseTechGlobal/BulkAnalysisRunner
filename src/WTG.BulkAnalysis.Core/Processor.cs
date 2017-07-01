@@ -4,9 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.TeamFoundation.Client;
 using WTG.DevTools.Common;
-using VC = Microsoft.TeamFoundation.VersionControl.Client;
 
 namespace WTG.BulkAnalysis.Core
 {
@@ -28,43 +26,30 @@ namespace WTG.BulkAnalysis.Core
 			var numSolutions = solutionPaths.Count;
 			var cache = AnalyzerCache.Create(context.RuleIds, context.LoadList);
 
-			using (var tfs = new TfsTeamProjectCollection(context.TfsServer))
+			foreach (var solutionPath in solutionPaths)
 			{
-				tfs.EnsureAuthenticated();
-				var vcs = tfs.GetService<VC.VersionControlServer>();
+				context.Log.WriteFormatted($"* Solution: {Path.GetFileName(solutionPath)} ({counter + 1}/{numSolutions})...");
 
-				var vcsWorkspace = vcs.TryGetWorkspace(context.PathToBranch);
-
-				if (vcsWorkspace == null)
+				using (var workspace = MSBuildWorkspace.Create())
 				{
-					throw new InvalidConfigurationException($"No workspace mapping found for '{context.PathToBranch}'.");
-				}
+					var solutionFullPath = Path.GetFullPath(Path.Combine(context.PathToBranch, solutionPath));
+					var solution = await workspace.OpenSolutionAsync(solutionFullPath, context.CancellationToken).ConfigureAwait(false);
+					var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
 
-				foreach (var solutionPath in solutionPaths)
-				{
-					context.Log.WriteFormatted($"* Solution: {Path.GetFileName(solutionPath)} ({counter + 1}/{numSolutions})...");
-
-					using (var workspace = MSBuildWorkspace.Create())
+					if (csharpProjects.Length == 0)
 					{
-						var solutionFullPath = Path.GetFullPath(Path.Combine(context.PathToBranch, solutionPath));
-						var solution = await workspace.OpenSolutionAsync(solutionFullPath, context.CancellationToken).ConfigureAwait(false);
-						var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
-
-						if (csharpProjects.Length == 0)
-						{
-							context.Log.WriteLine("  - No C# projects! Moving on to next solution...");
-						}
-						else
-						{
-							context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.");
-
-							var processor = new SolutionProcessor(context, cache, workspace, vcsWorkspace.PendEdit);
-							await processor.ProcessSolutionAsync().ConfigureAwait(false);
-						}
+						context.Log.WriteLine("  - No C# projects! Moving on to next solution...");
 					}
+					else
+					{
+						context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.");
 
-					counter++;
+						var processor = new SolutionProcessor(context, cache, workspace);
+						await processor.ProcessSolutionAsync().ConfigureAwait(false);
+					}
 				}
+
+				counter++;
 			}
 		}
 

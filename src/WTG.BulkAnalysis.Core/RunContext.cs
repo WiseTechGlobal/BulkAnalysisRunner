@@ -8,7 +8,7 @@ namespace WTG.BulkAnalysis.Core
 	{
 		public RunContext(
 			string pathToBranch,
-			Uri tfsServer,
+			IVersionControl versionControl,
 			Func<string, bool> solutionFilter,
 			bool applyFixes,
 			ImmutableHashSet<string> ruleIds,
@@ -18,7 +18,7 @@ namespace WTG.BulkAnalysis.Core
 			CancellationToken cancellationToken)
 		{
 			PathToBranch = pathToBranch;
-			TfsServer = tfsServer;
+			VersionControl = versionControl;
 			SolutionFilter = solutionFilter;
 			ApplyFixes = applyFixes;
 			RuleIds = ruleIds;
@@ -29,7 +29,7 @@ namespace WTG.BulkAnalysis.Core
 		}
 
 		public string PathToBranch { get; }
-		public Uri TfsServer { get; }
+		public IVersionControl VersionControl { get; }
 		public Func<string, bool> SolutionFilter { get; }
 		public bool ApplyFixes { get; }
 		public ImmutableHashSet<string> RuleIds { get; }

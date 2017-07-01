@@ -12,12 +12,11 @@ namespace WTG.BulkAnalysis.Core
 {
 	struct SolutionProcessor
 	{
-		public SolutionProcessor(RunContext context, AnalyzerCache cache, MSBuildWorkspace workspace, Func<string[], int> pendEdit)
+		public SolutionProcessor(RunContext context, AnalyzerCache cache, MSBuildWorkspace workspace)
 		{
 			this.context = context;
 			this.cache = cache;
 			this.workspace = workspace;
-			this.pendEdit = pendEdit;
 		}
 
 		public async Task ProcessSolutionAsync()
@@ -99,7 +98,7 @@ namespace WTG.BulkAnalysis.Core
 						.Distinct()
 						.ToArray();
 
-					pendEdit(filenames);
+					context.VersionControl.PendEdit(filenames);
 
 					var operations = await equivalence
 						.GetOperationsAsync(context.CancellationToken)
@@ -198,6 +197,5 @@ namespace WTG.BulkAnalysis.Core
 		readonly RunContext context;
 		readonly AnalyzerCache cache;
 		readonly MSBuildWorkspace workspace;
-		readonly Func<string[], int> pendEdit;
 	}
 }
