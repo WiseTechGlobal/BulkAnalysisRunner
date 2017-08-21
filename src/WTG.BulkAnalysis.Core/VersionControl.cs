@@ -15,7 +15,7 @@ namespace WTG.BulkAnalysis.Core
 
 			if (workspace == null)
 			{
-				throw new InvalidConfigurationException($"No workspace mapping found for '{directory}'.");
+				throw new InvalidConfigurationException(FormattableString.Invariant($"No workspace mapping found for '{directory}'."));
 			}
 
 			return new TfsVersionControl(tfs, workspace);

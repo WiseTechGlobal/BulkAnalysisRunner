@@ -65,7 +65,7 @@ namespace WTG.BulkAnalysis.Core
 			var solutionPaths =
 				from solution in buildXml.Solutions
 				let solutionPath = Path.GetFullPath(Path.Combine(path, solution.Filename))
-				where solutionPath.StartsWith(pathToBranch, StringComparison.InvariantCultureIgnoreCase)
+				where solutionPath.StartsWith(pathToBranch, StringComparison.OrdinalIgnoreCase)
 				select solutionPath;
 
 			if (context.SolutionFilter != null)
