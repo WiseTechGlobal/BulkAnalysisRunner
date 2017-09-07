@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,7 +31,7 @@ namespace WTG.BulkAnalysis.Core
 
 				if (analyzers.Length == 0)
 				{
-					context.Log.WriteLine("  - No analyzers! Moving on to next solution...");
+					context.Log.WriteLine("  - No analyzers registered for projects in this solution. Moving on...");
 					break;
 				}
 
@@ -46,12 +45,12 @@ namespace WTG.BulkAnalysis.Core
 
 				if (numDiagnostics == 0)
 				{
-					context.Log.WriteLine("  - No diagnostics! Moving on to next solution...");
+					context.Log.WriteLine("  - No issues found in this solution. Moving on...");
 					break;
 				}
 				else if (numPreviousDiagnostics == numDiagnostics)
 				{
-					context.Log.WriteLine("  - Previous run did not apply changes. Moving on to next solution...");
+					context.Log.WriteLine("  - Previous run did not apply changes. Moving on...");
 					break;
 				}
 
