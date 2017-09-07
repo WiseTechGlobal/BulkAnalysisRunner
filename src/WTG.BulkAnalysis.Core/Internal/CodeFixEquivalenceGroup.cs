@@ -50,8 +50,7 @@ namespace WTG.BulkAnalysis.Core
 				return ImmutableArray.Create<CodeFixEquivalenceGroup>();
 			}
 
-			var relevantDocumentDiagnostics = new Dictionary<ProjectId, Dictionary<string, List<Diagnostic>>>();
-			var relevantProjectDiagnostics = new Dictionary<ProjectId, List<Diagnostic>>();
+			var groupLookup = new Dictionary<string, Builder>();
 
 			foreach (var projectDiagnostics in allDiagnostics)
 			{
@@ -62,57 +61,21 @@ namespace WTG.BulkAnalysis.Core
 						continue;
 					}
 
-					if (diagnostic.Location.IsInSource)
+					var codeActions = await GetFixesAsync(solution, codeFixProvider, diagnostic, cancellationToken).ConfigureAwait(false);
+
+					foreach (var key in codeActions.Select(x => x.EquivalenceKey).Distinct())
 					{
-						var sourcePath = diagnostic.Location.GetLineSpan().Path;
-
-						if (!relevantDocumentDiagnostics.TryGetValue(projectDiagnostics.Key, out var projectDocumentDiagnostics))
+						if (!groupLookup.TryGetValue(key, out var group))
 						{
-							projectDocumentDiagnostics = new Dictionary<string, List<Diagnostic>>();
-							relevantDocumentDiagnostics.Add(projectDiagnostics.Key, projectDocumentDiagnostics);
+							groupLookup.Add(key, group = new Builder(key, solution, fixAllProvider, codeFixProvider));
 						}
 
-						if (!projectDocumentDiagnostics.TryGetValue(sourcePath, out var diagnosticsInFile))
-						{
-							diagnosticsInFile = new List<Diagnostic>();
-							projectDocumentDiagnostics.Add(sourcePath, diagnosticsInFile);
-						}
-
-						diagnosticsInFile.Add(diagnostic);
-					}
-					else
-					{
-						if (!relevantProjectDiagnostics.TryGetValue(projectDiagnostics.Key, out var diagnosticsInProject))
-						{
-							diagnosticsInProject = new List<Diagnostic>();
-							relevantProjectDiagnostics.Add(projectDiagnostics.Key, diagnosticsInProject);
-						}
-
-						diagnosticsInProject.Add(diagnostic);
+						group.AddDiagnostic(projectDiagnostics.Key, diagnostic);
 					}
 				}
 			}
 
-			var documentDiagnosticsToFix = relevantDocumentDiagnostics.ToImmutableDictionary(i => i.Key, i => i.Value.ToImmutableDictionary(j => j.Key, j => j.Value.ToImmutableArray(), StringComparer.OrdinalIgnoreCase));
-			var projectDiagnosticsToFix = relevantProjectDiagnostics.ToImmutableDictionary(i => i.Key, i => i.Value.ToImmutableArray());
-			var equivalenceKeys = new HashSet<string>();
-
-			foreach (var diagnostic in relevantDocumentDiagnostics.Values.SelectMany(i => i.Values).SelectMany(i => i).Concat(relevantProjectDiagnostics.Values.SelectMany(i => i)))
-			{
-				foreach (var codeAction in await GetFixesAsync(solution, codeFixProvider, diagnostic, cancellationToken).ConfigureAwait(false))
-				{
-					equivalenceKeys.Add(codeAction.EquivalenceKey);
-				}
-			}
-
-			var groups = new List<CodeFixEquivalenceGroup>();
-
-			foreach (var equivalenceKey in equivalenceKeys)
-			{
-				groups.Add(new CodeFixEquivalenceGroup(equivalenceKey, solution, fixAllProvider, codeFixProvider, documentDiagnosticsToFix, projectDiagnosticsToFix));
-			}
-
-			return groups.ToImmutableArray();
+			return groupLookup.Select(x => x.Value.ToEquivalenceGroup()).ToImmutableArray();
 		}
 
 		public async Task<ImmutableArray<CodeActionOperation>> GetOperationsAsync(CancellationToken cancellationToken)
@@ -168,6 +131,72 @@ namespace WTG.BulkAnalysis.Core
 						cancellationToken))
 				.ConfigureAwait(false);
 			return codeActions;
+		}
+
+		sealed class Builder
+		{
+			public Builder(string equivalenceKey, Solution solution, FixAllProvider fixAllProvider, CodeFixProvider codeFixProvider)
+			{
+				this.equivalenceKey = equivalenceKey;
+				this.solution = solution;
+				this.fixAllProvider = fixAllProvider;
+				this.codeFixProvider = codeFixProvider;
+				documentDiagnostics = new Dictionary<ProjectId, Dictionary<string, List<Diagnostic>>>();
+				projectDiagnostics = new Dictionary<ProjectId, List<Diagnostic>>();
+			}
+
+			public void AddDiagnostic(ProjectId projectId, Diagnostic diagnostic)
+			{
+				if (diagnostic.Location.IsInSource)
+				{
+					var sourcePath = diagnostic.Location.GetLineSpan().Path;
+
+					if (!documentDiagnostics.TryGetValue(projectId, out var projectDocumentDiagnostics))
+					{
+						projectDocumentDiagnostics = new Dictionary<string, List<Diagnostic>>();
+						documentDiagnostics.Add(projectId, projectDocumentDiagnostics);
+					}
+
+					if (!projectDocumentDiagnostics.TryGetValue(sourcePath, out var diagnosticsInFile))
+					{
+						diagnosticsInFile = new List<Diagnostic>();
+						projectDocumentDiagnostics.Add(sourcePath, diagnosticsInFile);
+					}
+
+					diagnosticsInFile.Add(diagnostic);
+				}
+				else
+				{
+					if (!projectDiagnostics.TryGetValue(projectId, out var diagnosticsInProject))
+					{
+						diagnosticsInProject = new List<Diagnostic>();
+						projectDiagnostics.Add(projectId, diagnosticsInProject);
+					}
+
+					diagnosticsInProject.Add(diagnostic);
+				}
+			}
+
+			public CodeFixEquivalenceGroup ToEquivalenceGroup()
+			{
+				var documentDiagnosticsToFix = documentDiagnostics.ToImmutableDictionary(i => i.Key, i => i.Value.ToImmutableDictionary(j => j.Key, j => j.Value.ToImmutableArray(), StringComparer.OrdinalIgnoreCase));
+				var projectDiagnosticsToFix = projectDiagnostics.ToImmutableDictionary(i => i.Key, i => i.Value.ToImmutableArray());
+
+				return new CodeFixEquivalenceGroup(
+					equivalenceKey,
+					solution,
+					fixAllProvider,
+					codeFixProvider,
+					documentDiagnosticsToFix,
+					projectDiagnosticsToFix);
+			}
+
+			readonly string equivalenceKey;
+			readonly Solution solution;
+			readonly FixAllProvider fixAllProvider;
+			readonly CodeFixProvider codeFixProvider;
+			readonly Dictionary<ProjectId, Dictionary<string, List<Diagnostic>>> documentDiagnostics;
+			readonly Dictionary<ProjectId, List<Diagnostic>> projectDiagnostics;
 		}
 	}
 }
