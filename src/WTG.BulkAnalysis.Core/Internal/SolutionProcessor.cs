@@ -91,12 +91,7 @@ namespace WTG.BulkAnalysis.Core
 
 				foreach (var equivalence in equivalenceGroups)
 				{
-					var filenames = equivalence
-						.DocumentDiagnosticsToFix.SelectMany(d => d.Value)
-						.Select(diag => diag.Key)
-						.Distinct()
-						.ToArray();
-
+					var filenames = equivalence.Filenames.ToArray();
 					context.VersionControl.PendEdit(filenames);
 
 					var operations = await equivalence

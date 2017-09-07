@@ -20,12 +20,12 @@ namespace WTG.BulkAnalysis.Core
 			ImmutableDictionary<ProjectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>>> documentDiagnosticsToFix,
 			ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> projectDiagnosticsToFix)
 		{
-			CodeFixEquivalenceKey = equivalenceKey;
-			Solution = solution;
-			FixAllProvider = fixAllProvider;
-			CodeFixProvider = codeFixProvider;
-			DocumentDiagnosticsToFix = documentDiagnosticsToFix;
-			ProjectDiagnosticsToFix = projectDiagnosticsToFix;
+			codeFixEquivalenceKey = equivalenceKey;
+			this.solution = solution;
+			this.fixAllProvider = fixAllProvider;
+			this.codeFixProvider = codeFixProvider;
+			this.documentDiagnosticsToFix = documentDiagnosticsToFix;
+			this.projectDiagnosticsToFix = projectDiagnosticsToFix;
 
 			NumberOfDiagnostics = documentDiagnosticsToFix
 				.SelectMany(x => x.Value)
@@ -33,13 +33,8 @@ namespace WTG.BulkAnalysis.Core
 				+ projectDiagnosticsToFix.Sum(x => x.Value.Length);
 		}
 
-		public string CodeFixEquivalenceKey { get; }
-		public Solution Solution { get; }
-		public FixAllProvider FixAllProvider { get; }
-		public CodeFixProvider CodeFixProvider { get; }
-		public ImmutableDictionary<ProjectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>>> DocumentDiagnosticsToFix { get; }
-		public ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> ProjectDiagnosticsToFix { get; }
 		public int NumberOfDiagnostics { get; }
+		public IEnumerable<string> Filenames => documentDiagnosticsToFix.SelectMany(d => d.Value).Select(diag => diag.Key).Distinct();
 
 		public static async Task<ImmutableArray<CodeFixEquivalenceGroup>> CreateAsync(CodeFixProvider codeFixProvider, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> allDiagnostics, Solution solution, CancellationToken cancellationToken)
 		{
@@ -80,37 +75,37 @@ namespace WTG.BulkAnalysis.Core
 
 		public async Task<ImmutableArray<CodeActionOperation>> GetOperationsAsync(CancellationToken cancellationToken)
 		{
-			var diagnostic = DocumentDiagnosticsToFix
+			var diagnostic = documentDiagnosticsToFix
 				.Values
 				.SelectMany(i => i.Values)
-				.Concat(ProjectDiagnosticsToFix.Values)
+				.Concat(projectDiagnosticsToFix.Values)
 				.First()
 				.First();
 
-			var document = Solution.GetDocument(diagnostic.Location.SourceTree);
+			var document = solution.GetDocument(diagnostic.Location.SourceTree);
 
 			var diagnosticIds = new HashSet<string>(
-				DocumentDiagnosticsToFix
+				documentDiagnosticsToFix
 					.Values
 					.SelectMany(i => i.Values)
-					.Concat(ProjectDiagnosticsToFix.Values)
+					.Concat(projectDiagnosticsToFix.Values)
 					.SelectMany(i => i)
 					.Select(j => j.Id));
 
 			var diagnosticsProvider = new TesterDiagnosticProvider(
-				DocumentDiagnosticsToFix,
-				ProjectDiagnosticsToFix);
+				documentDiagnosticsToFix,
+				projectDiagnosticsToFix);
 
 			var context = new FixAllContext(
 				document,
-				CodeFixProvider,
+				codeFixProvider,
 				FixAllScope.Solution,
-				CodeFixEquivalenceKey,
+				codeFixEquivalenceKey,
 				diagnosticIds,
 				diagnosticsProvider,
 				cancellationToken);
 
-			var action = await FixAllProvider
+			var action = await fixAllProvider
 				.GetFixAsync(context)
 				.ConfigureAwait(false);
 
@@ -132,6 +127,13 @@ namespace WTG.BulkAnalysis.Core
 				.ConfigureAwait(false);
 			return codeActions;
 		}
+
+		readonly string codeFixEquivalenceKey;
+		readonly Solution solution;
+		readonly FixAllProvider fixAllProvider;
+		readonly CodeFixProvider codeFixProvider;
+		readonly ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> projectDiagnosticsToFix;
+		readonly ImmutableDictionary<ProjectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>>> documentDiagnosticsToFix;
 
 		sealed class Builder
 		{
