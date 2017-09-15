@@ -91,19 +91,21 @@ namespace WTG.BulkAnalysis.Core
 
 				foreach (var equivalence in equivalenceGroups)
 				{
-					var filenames = equivalence.Filenames.ToArray();
-					context.VersionControl.PendEdit(filenames);
-
 					var operations = await equivalence
 						.GetOperationsAsync(context.CancellationToken)
 						.ConfigureAwait(false);
 
 					context.Log.WriteFormatted($"  - Applying {operations.Length} operations to resolve {equivalence.NumberOfDiagnostics} errors...");
 
+					var summary = FileChangeSet.Extract(solution, operations);
+					summary?.PreApply(context.VersionControl);
+
 					foreach (var operation in operations)
 					{
 						operation.Apply(workspace, context.CancellationToken);
 					}
+
+					summary?.PostApply(context.VersionControl);
 
 					count += operations.Length;
 				}

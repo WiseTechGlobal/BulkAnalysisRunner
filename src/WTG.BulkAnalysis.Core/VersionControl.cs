@@ -32,6 +32,16 @@ namespace WTG.BulkAnalysis.Core
 			workspace.PendEdit(paths);
 		}
 
+		public void PendAdd(string[] paths)
+		{
+			workspace.PendAdd(paths);
+		}
+
+		public void PendDelete(string[] paths)
+		{
+			workspace.PendDelete(paths);
+		}
+
 		public void Dispose()
 		{
 			tfs.Dispose();

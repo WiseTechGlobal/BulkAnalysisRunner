@@ -34,7 +34,6 @@ namespace WTG.BulkAnalysis.Core
 		}
 
 		public int NumberOfDiagnostics { get; }
-		public IEnumerable<string> Filenames => documentDiagnosticsToFix.SelectMany(d => d.Value).Select(diag => diag.Key).Distinct();
 
 		public static async Task<ImmutableArray<CodeFixEquivalenceGroup>> CreateAsync(CodeFixProvider codeFixProvider, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> allDiagnostics, Solution solution, CancellationToken cancellationToken)
 		{
