@@ -120,6 +120,7 @@ namespace WTG.BulkAnalysis.Core
 			{
 				if (project.Language != LanguageNames.CSharp)
 				{
+					context.Log.WriteFormatted($"  - Skipping {project.Name} as it is not a C# project. (Language == '{project.Language}')");
 					continue;
 				}
 
@@ -146,7 +147,8 @@ namespace WTG.BulkAnalysis.Core
 
 			var modifiedCompilationOptions = project
 				.CompilationOptions
-				.WithSpecificDiagnosticOptions(modifiedSpecificDiagnosticOptions);
+				.WithSpecificDiagnosticOptions(modifiedSpecificDiagnosticOptions)
+				.WithWarningLevel(4);
 
 			var compilation = await project
 				.WithCompilationOptions(modifiedCompilationOptions)
