@@ -1,4 +1,4 @@
-﻿<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<WTGBranchRoot>$(MSBuildThisFileDirectory)..</WTGBranchRoot>
 		<WTGPaketPackagesRoot>$(WTGBranchRoot)\packages</WTGPaketPackagesRoot>
@@ -14,7 +14,7 @@
 
 		<Company>WiseTech Global Pty Ltd</Company>
 		<Product>Bulk Analysis Runner</Product>
-		<Copyright>Copyright © WiseTech Global 2016-2017</Copyright>
+		<Copyright>Copyright © WiseTech Global 2016-2018</Copyright>
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<FileVersion>$(Version)</FileVersion>
 	</PropertyGroup>
