@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
@@ -12,7 +12,7 @@ namespace WTG.BulkAnalysis.Runner
 {
 	static class Program
 	{
-		static void Main(string[] args)
+		static async Task Main(string[] args)
 		{
 			AppDomain.CurrentDomain.AssemblyResolve += OnAppDomainAssemblyResolve;
 
@@ -24,7 +24,7 @@ namespace WTG.BulkAnalysis.Runner
 					cts.Cancel();
 				};
 
-				MainAsync(args, cts.Token).GetAwaiter().GetResult();
+				await MainAsync(args, cts.Token);
 			}
 		}
 

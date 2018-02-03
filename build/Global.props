@@ -9,6 +9,7 @@
 		<WarningLevel>4</WarningLevel>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<RunCodeAnalysis>true</RunCodeAnalysis>
+		<LangVersion>7.2</LangVersion>
 
 		<Version>2.2.0.0</Version>
 
