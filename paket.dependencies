@@ -1,4 +1,4 @@
-﻿# All packages come from the public NuGet Gallery
+# All packages come from the public NuGet Gallery
 source https://api.nuget.org/v3/index.json
 
 # Some packages (e.g. DotNet.Contracts) are built internally, and are not
@@ -29,7 +29,14 @@ nuget WTG.BuildConfiguration.Analysis
 nuget WTG.DevTools.Common
 nuget CommandLineParser 2.1.1-beta
 
-nuget Microsoft.CodeAnalysis
+nuget Microsoft.CodeAnalysis 2.2
+nuget Microsoft.CodeAnalysis.Common 2.2
+nuget Microsoft.CodeAnalysis.CSharp 2.2
+nuget Microsoft.CodeAnalysis.CSharp.Workspaces 2.2
+nuget Microsoft.CodeAnalysis.VisualBasic 2.2
+nuget Microsoft.CodeAnalysis.VisualBasic.Workspaces 2.2
+nuget Microsoft.CodeAnalysis.Workspaces.Common 2.2
+
 nuget Microsoft.Build
 nuget Microsoft.Build.Tasks.Core
 
