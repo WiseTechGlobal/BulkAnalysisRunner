@@ -24,11 +24,11 @@ namespace WTG.BulkAnalysis.Runner
 					cts.Cancel();
 				};
 
-				await MainAsync(args, cts.Token);
+				await MainAsync(args, ConsoleLog.Instance, cts.Token);
 			}
 		}
 
-		static async Task MainAsync(string[] args, CancellationToken cancellationToken)
+		static async Task MainAsync(string[] args, ILog log, CancellationToken cancellationToken)
 		{
 			var value = ParseArguments(args);
 
@@ -37,7 +37,7 @@ namespace WTG.BulkAnalysis.Runner
 				using (var reportGenerator = OpenReporter(value))
 				using (var versionControl = TfsVersionControl.Create(new Uri(value.ServerUrl, UriKind.Absolute), value.Path))
 				{
-					var context = NewContext(value, reportGenerator, versionControl, cancellationToken);
+					var context = NewContext(value, reportGenerator, versionControl, log, cancellationToken);
 
 					var sw = new Stopwatch();
 					sw.Start();
@@ -48,23 +48,23 @@ namespace WTG.BulkAnalysis.Runner
 					}
 					catch (InvalidConfigurationException ex)
 					{
-						Console.WriteLine(ex.Message);
+						log.WriteLine(ex.Message, LogLevel.Error);
 					}
 					catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
 					{
-						Console.WriteLine();
-						Console.WriteLine("Aborted.");
+						log.WriteLine();
+						log.WriteLine("Aborted.", LogLevel.Error);
 					}
 					finally
 					{
 						sw.Stop();
-						Console.WriteLine($"Time taken: {sw.Elapsed.TotalSeconds} seconds");
+						log.WriteFormatted($"Time taken: {sw.Elapsed.TotalSeconds} seconds");
 					}
 				}
 			}
 		}
 
-		static RunContext NewContext(CommandLineArgs value, XmlReportGenerator reportGenerator, TfsVersionControl versionControl, CancellationToken cancellationToken)
+		static RunContext NewContext(CommandLineArgs value, XmlReportGenerator reportGenerator, TfsVersionControl versionControl, ILog log, CancellationToken cancellationToken)
 		{
 			return new RunContext(
 				value.Path,
@@ -73,7 +73,7 @@ namespace WTG.BulkAnalysis.Runner
 				value.Fix,
 				ImmutableHashSet.CreateRange(value.RuleIDs),
 				value.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
-				ConsoleLog.Instance,
+				log,
 				reportGenerator,
 				cancellationToken);
 		}

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -31,7 +31,7 @@ namespace WTG.BulkAnalysis.Core
 
 				if (analyzers.Length == 0)
 				{
-					context.Log.WriteLine("  - No analyzers registered for projects in this solution. Moving on...");
+					context.Log.WriteLine("  - No analyzers registered for projects in this solution. Moving on...", LogLevel.Warning);
 					break;
 				}
 
@@ -95,7 +95,7 @@ namespace WTG.BulkAnalysis.Core
 						.GetOperationsAsync(context.CancellationToken)
 						.ConfigureAwait(false);
 
-					context.Log.WriteFormatted($"  - Applying {operations.Length} operations to resolve {equivalence.NumberOfDiagnostics} errors...");
+					context.Log.WriteFormatted($"  - Applying {operations.Length} operations to resolve {equivalence.NumberOfDiagnostics} errors...", LogLevel.Success);
 
 					var summary = FileChangeSet.Extract(solution, operations);
 					summary?.PreApply(context.VersionControl);
@@ -122,7 +122,7 @@ namespace WTG.BulkAnalysis.Core
 			{
 				if (project.Language != LanguageNames.CSharp)
 				{
-					context.Log.WriteFormatted($"  - Skipping {project.Name} as it is not a C# project. (Language == '{project.Language}')");
+					context.Log.WriteFormatted($"  - Skipping {project.Name} as it is not a C# project. (Language == '{project.Language}')", LogLevel.Warning);
 					continue;
 				}
 

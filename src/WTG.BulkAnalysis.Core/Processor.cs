@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -42,7 +42,7 @@ namespace WTG.BulkAnalysis.Core
 
 					if (csharpProjects.Length == 0)
 					{
-						context.Log.WriteLine("  - No C# projects! Moving on to next solution...");
+						context.Log.WriteLine("  - No C# projects! Moving on to next solution...", LogLevel.Warning);
 					}
 					else
 					{
