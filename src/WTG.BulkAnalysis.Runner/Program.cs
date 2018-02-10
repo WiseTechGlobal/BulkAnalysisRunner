@@ -24,7 +24,7 @@ namespace WTG.BulkAnalysis.Runner
 					cts.Cancel();
 				};
 
-				await MainAsync(args, ConsoleLog.Instance, cts.Token);
+				await MainAsync(args, ConsoleLog.Instance, cts.Token).ConfigureAwait(false);
 			}
 		}
 

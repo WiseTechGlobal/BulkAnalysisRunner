@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Client;
 
@@ -27,25 +27,10 @@ namespace WTG.BulkAnalysis.Core
 			this.workspace = workspace;
 		}
 
-		public void PendEdit(string[] paths)
-		{
-			workspace.PendEdit(paths);
-		}
-
-		public void PendAdd(string[] paths)
-		{
-			workspace.PendAdd(paths);
-		}
-
-		public void PendDelete(string[] paths)
-		{
-			workspace.PendDelete(paths);
-		}
-
-		public void Dispose()
-		{
-			tfs.Dispose();
-		}
+		public void PendEdit(string[] paths) => workspace.PendEdit(paths);
+		public void PendAdd(string[] paths) => workspace.PendAdd(paths);
+		public void PendDelete(string[] paths) => workspace.PendDelete(paths);
+		public void Dispose() => tfs.Dispose();
 
 		readonly TfsTeamProjectCollection tfs;
 		readonly Workspace workspace;
