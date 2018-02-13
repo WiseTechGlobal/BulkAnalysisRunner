@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CommandLine;
 using CommandLine.Text;
@@ -16,7 +16,7 @@ namespace WTG.BulkAnalysis.Runner
 		[Value(1, Required = true, Hidden = true)]
 		public IEnumerable<string> RuleIDs { get; set; }
 
-		[Option("filter", Required = false, HelpText = "When specified, only solutions matching this filter will be processed.")]
+		[Option("filter", Required = false, HelpText = "When specified, only solutions matching this regular expression will be processed.")]
 		public string Filter { get; set; }
 
 		[Option("fix", Required = false, HelpText = "Attempt to apply code fixes.")]

@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
@@ -115,9 +116,8 @@ namespace WTG.BulkAnalysis.Runner
 				return null;
 			}
 
-			return value.Filter.IsContainedIn;
+			var regex = new Regex(value.Filter, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+			return regex.IsMatch;
 		}
-
-		static bool IsContainedIn(this string substring, string value) => value.IndexOf(substring, StringComparison.OrdinalIgnoreCase) >= 0;
 	}
 }
