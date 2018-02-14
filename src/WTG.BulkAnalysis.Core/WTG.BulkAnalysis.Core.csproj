@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup Label="Globals">
     <SccProjectName>SAK</SccProjectName>
@@ -15,7 +15,7 @@
 
   <Import Project="..\..\build\Global.props" />
   <Import Project="..\..\build\Global.targets" />
-  <Import Project="..\..\packages\Microsoft.TeamFoundationServer.ExtendedClient\build\Microsoft.TeamFoundationServer.ExtendedClient.targets" />
+  <Import Condition="Exists('..\..\packages\Microsoft.TeamFoundationServer.ExtendedClient\build\Microsoft.TeamFoundationServer.ExtendedClient.targets')" Project="..\..\packages\Microsoft.TeamFoundationServer.ExtendedClient\build\Microsoft.TeamFoundationServer.ExtendedClient.targets" />
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 
 </Project>

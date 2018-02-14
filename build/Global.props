@@ -32,6 +32,6 @@
 		<DebugType>full</DebugType>
 	</PropertyGroup>
 
-	<Import Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.props" />
-	<Import Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Analysis\build\WTG.BuildConfiguration.Analysis.props" />
+	<Import Condition="Exists('$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.props')" Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.props" />
+	<Import Condition="Exists('$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Analysis\build\WTG.BuildConfiguration.Analysis.props')" Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Analysis\build\WTG.BuildConfiguration.Analysis.props" />
 </Project>

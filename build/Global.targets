@@ -1,3 +1,3 @@
-﻿<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<Import Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.targets" />
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Condition="Exists('$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.targets')" Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.targets" />
 </Project>
