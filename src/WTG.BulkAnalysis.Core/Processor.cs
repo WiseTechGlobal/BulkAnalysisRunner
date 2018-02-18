@@ -29,7 +29,7 @@ namespace WTG.BulkAnalysis.Core
 
 			var counter = 0;
 			var numSolutions = solutionPaths.Length;
-			var cache = AnalyzerCache.Create(context.RuleIds, context.LoadList);
+			var cache = AnalyzerCache.Create(context.RuleIds, context.LoadDir, context.LoadList);
 
 			foreach (var solutionPath in solutionPaths)
 			{

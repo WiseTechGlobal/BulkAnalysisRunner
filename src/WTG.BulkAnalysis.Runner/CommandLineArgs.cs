@@ -28,6 +28,9 @@ namespace WTG.BulkAnalysis.Runner
 		[Option("tfs", Required = false, Default = "http://tfs.wtg.zone:8080/tfs/CargoWise", HelpText = "Specifies the tfs project collection uri.")]
 		public string ServerUrl { get; set; }
 
+		[Option("loadDir", Required = false, HelpText = "Specifies a directory where analyzer assemblies can be found.")]
+		public string LoadDir { get; set; }
+
 		[Option("load", Required = false, HelpText = "Specifies the assemblies to load and search for analyzers and code fixes. If none is specified, then it will attempt to use whatever the project specifies.", Separator = ';')]
 		public IEnumerable<string> LoadList { get; set; }
 	}

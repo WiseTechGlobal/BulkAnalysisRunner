@@ -73,6 +73,7 @@ namespace WTG.BulkAnalysis.Runner
 				CreateFilter(value),
 				value.Fix,
 				ImmutableHashSet.CreateRange(value.RuleIDs),
+				value.LoadDir,
 				value.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
 				log,
 				reportGenerator,

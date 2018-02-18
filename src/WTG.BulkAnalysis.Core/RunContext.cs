@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Threading;
 
@@ -12,6 +12,7 @@ namespace WTG.BulkAnalysis.Core
 			Func<string, bool> solutionFilter,
 			bool applyFixes,
 			ImmutableHashSet<string> ruleIds,
+			string loadDir,
 			ImmutableArray<string> loadList,
 			ILog log,
 			IReportGenerator reporter,
@@ -22,6 +23,7 @@ namespace WTG.BulkAnalysis.Core
 			SolutionFilter = solutionFilter;
 			ApplyFixes = applyFixes;
 			RuleIds = ruleIds;
+			LoadDir = loadDir;
 			LoadList = loadList;
 			Log = log;
 			Reporter = reporter;
@@ -33,6 +35,7 @@ namespace WTG.BulkAnalysis.Core
 		public Func<string, bool> SolutionFilter { get; }
 		public bool ApplyFixes { get; }
 		public ImmutableHashSet<string> RuleIds { get; }
+		public string LoadDir { get; }
 		public ImmutableArray<string> LoadList { get; }
 		public ILog Log { get; }
 		public IReportGenerator Reporter { get; }
