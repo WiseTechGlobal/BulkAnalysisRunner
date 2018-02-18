@@ -59,6 +59,10 @@ namespace WTG.BulkAnalysis.Runner
 					color = ConsoleColor.Green;
 					break;
 
+				case LogLevel.Info:
+					color = ConsoleColor.Gray;
+					break;
+
 				default:
 					color = default;
 					return false;

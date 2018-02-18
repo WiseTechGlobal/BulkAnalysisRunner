@@ -45,12 +45,12 @@ namespace WTG.BulkAnalysis.Core
 
 				if (numDiagnostics == 0)
 				{
-					context.Log.WriteLine("  - No issues found in this solution. Moving on...");
+					context.Log.WriteLine("  - No issues found in this solution. Moving on...", LogLevel.Info);
 					break;
 				}
 				else if (numPreviousDiagnostics == numDiagnostics)
 				{
-					context.Log.WriteLine("  - Previous run did not apply changes. Moving on...");
+					context.Log.WriteLine("  - Previous run did not apply changes. Moving on...", LogLevel.Info);
 					break;
 				}
 
@@ -73,7 +73,7 @@ namespace WTG.BulkAnalysis.Core
 
 			if (context.ApplyFixes)
 			{
-				context.Log.WriteFormatted($"  - Applied {operationsCounter} fix-all operations to resolve errors.");
+				context.Log.WriteFormatted($"  - Applied {operationsCounter} fix-all operations to resolve errors.", LogLevel.Info);
 			}
 		}
 

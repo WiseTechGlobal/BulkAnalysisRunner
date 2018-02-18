@@ -4,6 +4,7 @@ namespace WTG.BulkAnalysis.Core
 	{
 		Normal,
 		Success,
+		Info,
 		Warning,
 		Error,
 	}

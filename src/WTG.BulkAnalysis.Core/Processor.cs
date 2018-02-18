@@ -46,7 +46,7 @@ namespace WTG.BulkAnalysis.Core
 					}
 					else
 					{
-						context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.");
+						context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.", LogLevel.Info);
 
 						var processor = new SolutionProcessor(context, cache, workspace);
 						await processor.ProcessSolutionAsync().ConfigureAwait(false);
