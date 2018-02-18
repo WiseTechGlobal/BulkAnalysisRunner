@@ -144,8 +144,12 @@ namespace WTG.BulkAnalysis.Core
 		{
 			var modifiedSpecificDiagnosticOptions = project
 				.CompilationOptions
-				.SpecificDiagnosticOptions
-				.Add("AD0001", ReportDiagnostic.Error);
+				.SpecificDiagnosticOptions;
+
+			foreach (var id in analyzerErrorIds)
+			{
+				modifiedSpecificDiagnosticOptions = modifiedSpecificDiagnosticOptions.Add(id, ReportDiagnostic.Error);
+			}
 
 			var modifiedCompilationOptions = project
 				.CompilationOptions
@@ -167,10 +171,26 @@ namespace WTG.BulkAnalysis.Core
 				.ConfigureAwait(false);
 
 			var ruleIds = context.RuleIds;
+			ImmutableArray<Diagnostic>.Builder builder = null;
 
-			return diagnostics
-				.Where(d => ruleIds.Contains(d.Id))
-				.ToImmutableArray();
+			foreach (var diagnostic in diagnostics)
+			{
+				if (analyzerErrorIds.Contains(diagnostic.Id))
+				{
+					context.Log.WriteLine(diagnostic.GetMessage(), LogLevel.Error);
+				}
+				else if (ruleIds.Contains(diagnostic.Id))
+				{
+					if (builder == null)
+					{
+						builder = ImmutableArray.CreateBuilder<Diagnostic>();
+					}
+
+					builder.Add(diagnostic);
+				}
+			}
+
+			return builder == null ? ImmutableArray<Diagnostic>.Empty : builder.ToImmutable();
 		}
 
 		IEnumerable<CodeFixProvider> GetApplicableFixProviders(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)
@@ -195,5 +215,7 @@ namespace WTG.BulkAnalysis.Core
 		readonly RunContext context;
 		readonly AnalyzerCache cache;
 		readonly MSBuildWorkspace workspace;
+
+		static readonly ImmutableHashSet<string> analyzerErrorIds = ImmutableHashSet.Create("AD0001");
 	}
 }
