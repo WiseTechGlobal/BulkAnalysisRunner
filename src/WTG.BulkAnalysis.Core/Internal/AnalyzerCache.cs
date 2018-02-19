@@ -74,8 +74,15 @@ namespace WTG.BulkAnalysis.Core
 
 			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Solution solution)
 			{
+				var paths = GetAnalyzerRefs(solution);
+
+				if (!string.IsNullOrEmpty(loadDir))
+				{
+					paths = Remap(paths, loadDir);
+				}
+
 				return ImmutableDictionary.ToImmutableDictionary(
-					from analyzerRef in GetAnalyzerRefs(solution)
+					from analyzerRef in paths
 					from codeFixProvider in GetCodeFixProviders(analyzerRef)
 					from diagnosticId in codeFixProvider.FixableDiagnosticIds
 					group codeFixProvider by diagnosticId into g
