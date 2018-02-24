@@ -1,15 +1,5 @@
-# All packages come from the public NuGet Gallery
-source https://api.nuget.org/v3/index.json
-
-# Some packages (e.g. DotNet.Contracts) are built internally, and are not
-# available from the Gallery.
-source \\sydco-sdts-2.wtg.zone\ThirdParty\NuGet-HomeGrown
-
-# Use a local cache in case a package gets deleted from the Gallery,
-# or in case we lose our internet connection.
-# NOTE: DAT Build Servers never have access to the Gallery.
-cache \\sydco-sdts-2.wtg.zone\ThirdParty\NuGet-PaketCache
-
+source http://proget.wtg.zone/nuget/Gallery/
+source http://proget.wtg.zone/nuget/WTG-Internal
 # This filters out extra supporting libraries from .NET Core that
 # we don't care about (yet).
 framework: net47
@@ -25,7 +15,7 @@ framework: net47
 
 nuget stylecop.analyzers
 nuget WTG.BuildConfiguration.Build
-nuget WTG.BuildConfiguration.Analysis
+nuget WTG.BuildConfiguration.Analysis 1.0.1
 nuget WTG.DevTools.Common
 nuget CommandLineParser 2.1.1-beta
 
