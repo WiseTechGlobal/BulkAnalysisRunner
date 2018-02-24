@@ -35,6 +35,12 @@ namespace WTG.BulkAnalysis.Runner
 
 			if (value != null)
 			{
+				if (value.Pause)
+				{
+					Console.WriteLine("Press any key to continue.");
+					Console.ReadKey();
+				}
+
 				using (var reportGenerator = OpenReporter(value))
 				using (var versionControl = TfsVersionControl.Create(new Uri(value.ServerUrl, UriKind.Absolute), value.Path))
 				{

@@ -33,5 +33,8 @@ namespace WTG.BulkAnalysis.Runner
 
 		[Option("load", Required = false, HelpText = "Specifies the assemblies to load and search for analyzers and code fixes. If none is specified, then it will attempt to use whatever the project specifies.", Separator = ';')]
 		public IEnumerable<string> LoadList { get; set; }
+
+		[Option("pause", Required = false, Hidden = true)]
+		public bool Pause { get; set; }
 	}
 }
