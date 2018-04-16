@@ -19,13 +19,7 @@ nuget WTG.BuildConfiguration.Analysis 1.0.1
 nuget WTG.DevTools.Common
 nuget CommandLineParser 2.1.1-beta
 
-nuget Microsoft.CodeAnalysis 2.2
-nuget Microsoft.CodeAnalysis.Common 2.2
-nuget Microsoft.CodeAnalysis.CSharp 2.2
-nuget Microsoft.CodeAnalysis.CSharp.Workspaces 2.2
-nuget Microsoft.CodeAnalysis.VisualBasic 2.2
-nuget Microsoft.CodeAnalysis.VisualBasic.Workspaces 2.2
-nuget Microsoft.CodeAnalysis.Workspaces.Common 2.2
+nuget Microsoft.CodeAnalysis
 
 nuget Microsoft.Build
 nuget Microsoft.Build.Tasks.Core
