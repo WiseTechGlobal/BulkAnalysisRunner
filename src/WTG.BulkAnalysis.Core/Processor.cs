@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Options;
 using WTG.DevTools.Common;
 
 namespace WTG.BulkAnalysis.Core
@@ -37,6 +39,7 @@ namespace WTG.BulkAnalysis.Core
 
 				using (var workspace = MSBuildWorkspace.Create())
 				{
+					ConfigureWorkspace(workspace);
 					var solution = await workspace.OpenSolutionAsync(solutionPath, context.CancellationToken).ConfigureAwait(false);
 					var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
 
@@ -55,6 +58,14 @@ namespace WTG.BulkAnalysis.Core
 
 				counter++;
 			}
+		}
+
+		static void ConfigureWorkspace(MSBuildWorkspace workspace)
+		{
+			workspace.Options = workspace.Options
+				.WithChangedOption(UseTabsOptionKey, true)
+				.WithChangedOption(TabSizeOptionKey, 4)
+				.WithChangedOption(IndentationSizeOptionKey, 4);
 		}
 
 		static ImmutableArray<string> GetSolutionPaths(RunContext context)
@@ -99,5 +110,9 @@ namespace WTG.BulkAnalysis.Core
 				}
 			}
 		}
+
+		static readonly OptionKey UseTabsOptionKey = new OptionKey(FormattingOptions.UseTabs, LanguageNames.CSharp);
+		static readonly OptionKey TabSizeOptionKey = new OptionKey(FormattingOptions.TabSize, LanguageNames.CSharp);
+		static readonly OptionKey IndentationSizeOptionKey = new OptionKey(FormattingOptions.IndentationSize, LanguageNames.CSharp);
 	}
 }
