@@ -20,8 +20,6 @@ nuget WTG.DevTools.Common
 nuget CommandLineParser 2.1.1-beta
 
 nuget Microsoft.CodeAnalysis
-
-nuget Microsoft.Build
-nuget Microsoft.Build.Tasks.Core
+nuget Microsoft.Build.Locator
 
 nuget Microsoft.TeamFoundationServer.ExtendedClient >= 15.0

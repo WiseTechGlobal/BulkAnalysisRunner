@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
+using Microsoft.Build.Locator;
 using WTG.BulkAnalysis.Core;
 
 namespace WTG.BulkAnalysis.Runner
@@ -32,6 +33,8 @@ namespace WTG.BulkAnalysis.Runner
 		static async Task MainAsync(string[] args, ILog log, CancellationToken cancellationToken)
 		{
 			var value = ParseArguments(args);
+
+			MSBuildLocator.RegisterDefaults();
 
 			if (value != null)
 			{
