@@ -188,7 +188,7 @@ NUGET
     System.Xml.XPath.XDocument (4.3.0)
       System.Xml.XPath (>= 4.3)
     WindowsAzure.ServiceBus (4.1.10)
-    WTG.Analyzers (2.0.4)
+    WTG.Analyzers (2.0.5)
   remote: http://proget.wtg.zone/nuget/WTG-Internal
     Dat.Integration (18.5.8.9)
     WTG.BuildConfiguration.Analysis (1.0.1)
