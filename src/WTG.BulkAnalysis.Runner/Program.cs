@@ -16,6 +16,19 @@ namespace WTG.BulkAnalysis.Runner
 	{
 		static async Task Main(string[] args)
 		{
+			if (args == null || args.Length == 0)
+			{
+				// Workaround for https://github.com/commandlineparser/commandline/issues/115
+				args = new[] { "--help" };
+			}
+
+			var arguments = ParseArguments(args);
+
+			if (arguments == null)
+			{
+				return;
+			}
+
 			AppDomain.CurrentDomain.AssemblyResolve += OnAppDomainAssemblyResolve;
 
 			using (var cts = new CancellationTokenSource())
@@ -26,50 +39,45 @@ namespace WTG.BulkAnalysis.Runner
 					cts.Cancel();
 				};
 
-				await MainAsync(args, ConsoleLog.Instance, cts.Token).ConfigureAwait(false);
+				await MainAsync(arguments, ConsoleLog.Instance, cts.Token).ConfigureAwait(false);
 			}
 		}
 
-		static async Task MainAsync(string[] args, ILog log, CancellationToken cancellationToken)
+		static async Task MainAsync(CommandLineArgs arguments, ILog log, CancellationToken cancellationToken)
 		{
-			var value = ParseArguments(args);
-
 			MSBuildLocator.RegisterDefaults();
 
-			if (value != null)
+			if (arguments.Pause)
 			{
-				if (value.Pause)
+				Console.WriteLine("Press any key to continue.");
+				Console.ReadKey();
+			}
+
+			using (var reportGenerator = OpenReporter(arguments))
+			using (var versionControl = TfsVersionControl.Create(new Uri(arguments.ServerUrl, UriKind.Absolute), arguments.Path))
+			{
+				var context = NewContext(arguments, reportGenerator, versionControl, log, cancellationToken);
+
+				var sw = new Stopwatch();
+				sw.Start();
+
+				try
 				{
-					Console.WriteLine("Press any key to continue.");
-					Console.ReadKey();
+					await Processor.ProcessAsync(context).ConfigureAwait(false);
 				}
-
-				using (var reportGenerator = OpenReporter(value))
-				using (var versionControl = TfsVersionControl.Create(new Uri(value.ServerUrl, UriKind.Absolute), value.Path))
+				catch (InvalidConfigurationException ex)
 				{
-					var context = NewContext(value, reportGenerator, versionControl, log, cancellationToken);
-
-					var sw = new Stopwatch();
-					sw.Start();
-
-					try
-					{
-						await Processor.ProcessAsync(context).ConfigureAwait(false);
-					}
-					catch (InvalidConfigurationException ex)
-					{
-						log.WriteLine(ex.Message, LogLevel.Error);
-					}
-					catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
-					{
-						log.WriteLine();
-						log.WriteLine("Aborted.", LogLevel.Error);
-					}
-					finally
-					{
-						sw.Stop();
-						log.WriteFormatted($"Time taken: {sw.Elapsed.TotalSeconds} seconds");
-					}
+					log.WriteLine(ex.Message, LogLevel.Error);
+				}
+				catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+				{
+					log.WriteLine();
+					log.WriteLine("Aborted.", LogLevel.Error);
+				}
+				finally
+				{
+					sw.Stop();
+					log.WriteFormatted($"Time taken: {sw.Elapsed.TotalSeconds} seconds");
 				}
 			}
 		}
