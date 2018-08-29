@@ -92,9 +92,8 @@ namespace WTG.BulkAnalysis.Runner
 		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator reportGenerator, IVersionControl versionControl, ILog log, CancellationToken cancellationToken)
 		{
 			return new RunContext(
-				arguments.Path,
+				SolutionLocator.Locate(arguments.Path, CreateFilter(arguments)),
 				versionControl,
-				CreateFilter(arguments),
 				arguments.Fix,
 				ImmutableHashSet.CreateRange(arguments.RuleIDs),
 				arguments.LoadDir,

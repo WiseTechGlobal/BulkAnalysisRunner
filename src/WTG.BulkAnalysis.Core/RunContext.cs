@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using System.Threading;
 
@@ -7,9 +6,8 @@ namespace WTG.BulkAnalysis.Core
 	public sealed class RunContext
 	{
 		public RunContext(
-			string pathToBranch,
+			ImmutableArray<string> solutionPaths,
 			IVersionControl versionControl,
-			Func<string, bool> solutionFilter,
 			bool applyFixes,
 			ImmutableHashSet<string> ruleIds,
 			string loadDir,
@@ -18,9 +16,8 @@ namespace WTG.BulkAnalysis.Core
 			IReportGenerator reporter,
 			CancellationToken cancellationToken)
 		{
-			PathToBranch = pathToBranch;
+			SolutionPaths = solutionPaths;
 			VersionControl = versionControl;
-			SolutionFilter = solutionFilter;
 			ApplyFixes = applyFixes;
 			RuleIds = ruleIds;
 			LoadDir = loadDir;
@@ -30,9 +27,8 @@ namespace WTG.BulkAnalysis.Core
 			CancellationToken = cancellationToken;
 		}
 
-		public string PathToBranch { get; }
+		public ImmutableArray<string> SolutionPaths { get; }
 		public IVersionControl VersionControl { get; }
-		public Func<string, bool> SolutionFilter { get; }
 		public bool ApplyFixes { get; }
 		public ImmutableHashSet<string> RuleIds { get; }
 		public string LoadDir { get; }

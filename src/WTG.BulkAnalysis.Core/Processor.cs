@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,18 +5,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Options;
-using WTG.DevTools.Common;
 
 namespace WTG.BulkAnalysis.Core
 {
 	public static class Processor
 	{
-		public static Task ProcessAsync(RunContext context)
-		{
-			return ProcessAsync(context, GetSolutionPaths(context));
-		}
-
-		static async Task ProcessAsync(RunContext context, ImmutableArray<string> solutionPaths)
+		public static async Task ProcessAsync(RunContext context)
 		{
 			context.Log.WriteLine("Rule IDs:");
 
@@ -30,10 +22,10 @@ namespace WTG.BulkAnalysis.Core
 			context.Log.WriteLine();
 
 			var counter = 0;
-			var numSolutions = solutionPaths.Length;
+			var numSolutions = context.SolutionPaths.Length;
 			var cache = AnalyzerCache.Create(context.RuleIds, context.LoadDir, context.LoadList);
 
-			foreach (var solutionPath in solutionPaths)
+			foreach (var solutionPath in context.SolutionPaths)
 			{
 				context.Log.WriteFormatted($"* Solution: {Path.GetFileName(solutionPath)} ({counter + 1}/{numSolutions})...");
 
@@ -66,49 +58,6 @@ namespace WTG.BulkAnalysis.Core
 				.WithChangedOption(UseTabsOptionKey, true)
 				.WithChangedOption(TabSizeOptionKey, 4)
 				.WithChangedOption(IndentationSizeOptionKey, 4);
-		}
-
-		static ImmutableArray<string> GetSolutionPaths(RunContext context)
-		{
-			var pathToBranch = Path.GetFullPath(context.PathToBranch);
-			var (buildXml, path) = LocateBuildXml(pathToBranch);
-
-			var solutionPaths =
-				from solution in buildXml.Solutions
-				let solutionPath = Path.GetFullPath(Path.Combine(path, solution.Filename))
-				where solutionPath.StartsWith(pathToBranch, StringComparison.OrdinalIgnoreCase)
-				select solutionPath;
-
-			if (context.SolutionFilter != null)
-			{
-				solutionPaths = solutionPaths.Where(context.SolutionFilter);
-			}
-
-			return solutionPaths.ToImmutableArray();
-		}
-
-		static (BuildXml buildXml, string path) LocateBuildXml(string pathToBranch)
-		{
-			while (true)
-			{
-				var buildXmlPath = Path.Combine(pathToBranch, BuildXmlFile.FileName);
-
-				try
-				{
-					var buildXml = BuildXmlFile.Deserialize(buildXmlPath);
-					return (buildXml, pathToBranch);
-				}
-				catch (FileNotFoundException)
-				{
-				}
-
-				pathToBranch = Path.GetDirectoryName(pathToBranch);
-
-				if (pathToBranch == null)
-				{
-					throw new InvalidConfigurationException("Build.xml could be found.");
-				}
-			}
 		}
 
 		static readonly OptionKey UseTabsOptionKey = new OptionKey(FormattingOptions.UseTabs, LanguageNames.CSharp);
