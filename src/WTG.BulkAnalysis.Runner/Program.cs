@@ -82,24 +82,24 @@ namespace WTG.BulkAnalysis.Runner
 			}
 		}
 
-		static RunContext NewContext(CommandLineArgs value, XmlReportGenerator reportGenerator, TfsVersionControl versionControl, ILog log, CancellationToken cancellationToken)
+		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator reportGenerator, TfsVersionControl versionControl, ILog log, CancellationToken cancellationToken)
 		{
 			return new RunContext(
-				value.Path,
+				arguments.Path,
 				versionControl,
-				CreateFilter(value),
-				value.Fix,
-				ImmutableHashSet.CreateRange(value.RuleIDs),
-				value.LoadDir,
-				value.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
+				CreateFilter(arguments),
+				arguments.Fix,
+				ImmutableHashSet.CreateRange(arguments.RuleIDs),
+				arguments.LoadDir,
+				arguments.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
 				log,
 				reportGenerator,
 				cancellationToken);
 		}
 
-		static XmlReportGenerator OpenReporter(CommandLineArgs value)
+		static XmlReportGenerator OpenReporter(CommandLineArgs arguments)
 		{
-			return string.IsNullOrEmpty(value.Report) ? null : XmlReportGenerator.New(value.Report);
+			return string.IsNullOrEmpty(arguments.Report) ? null : XmlReportGenerator.New(arguments.Report);
 		}
 
 		static CommandLineArgs ParseArguments(string[] args)
@@ -127,14 +127,14 @@ namespace WTG.BulkAnalysis.Runner
 			return Assembly.LoadFile(assemblyPath);
 		}
 
-		static Func<string, bool> CreateFilter(CommandLineArgs value)
+		static Func<string, bool> CreateFilter(CommandLineArgs arguments)
 		{
-			if (value.Filter == null)
+			if (arguments.Filter == null)
 			{
 				return null;
 			}
 
-			var regex = new Regex(value.Filter, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+			var regex = new Regex(arguments.Filter, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 			return regex.IsMatch;
 		}
 	}
