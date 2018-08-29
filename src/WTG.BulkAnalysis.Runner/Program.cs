@@ -17,12 +17,6 @@ namespace WTG.BulkAnalysis.Runner
 	{
 		static async Task Main(string[] args)
 		{
-			if (args == null || args.Length == 0)
-			{
-				// Workaround for https://github.com/commandlineparser/commandline/issues/115
-				args = new[] { "--help" };
-			}
-
 			var arguments = ParseArguments(args);
 
 			if (arguments == null)

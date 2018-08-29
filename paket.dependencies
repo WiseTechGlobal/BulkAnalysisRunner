@@ -17,7 +17,7 @@ nuget stylecop.analyzers
 nuget WTG.BuildConfiguration.Build
 nuget WTG.BuildConfiguration.Analysis 1.0.1
 nuget WTG.DevTools.Common
-nuget CommandLineParser 2.1.1-beta
+nuget CommandLineParser
 
 nuget Microsoft.CodeAnalysis
 nuget Microsoft.Build.Locator
