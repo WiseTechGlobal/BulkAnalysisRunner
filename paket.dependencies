@@ -21,5 +21,6 @@ nuget CommandLineParser
 
 nuget Microsoft.CodeAnalysis
 nuget Microsoft.Build.Locator
+nuget Microsoft.CodeAnalysis.Workspaces.MSBuild
 
 nuget Microsoft.TeamFoundationServer.ExtendedClient >= 15.0

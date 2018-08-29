@@ -32,7 +32,11 @@ namespace WTG.BulkAnalysis.Core
 				using (var workspace = MSBuildWorkspace.Create())
 				{
 					ConfigureWorkspace(workspace);
-					var solution = await workspace.OpenSolutionAsync(solutionPath, context.CancellationToken).ConfigureAwait(false);
+
+					var solution = await workspace.OpenSolutionAsync(
+						solutionPath,
+						cancellationToken: context.CancellationToken).ConfigureAwait(false);
+
 					var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
 
 					if (csharpProjects.Length == 0)
