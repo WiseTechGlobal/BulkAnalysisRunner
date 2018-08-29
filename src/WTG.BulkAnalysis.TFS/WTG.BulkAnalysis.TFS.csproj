@@ -13,8 +13,12 @@
     <OutputPath>..\..\bin</OutputPath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\WTG.BulkAnalysis.Core\WTG.BulkAnalysis.Core.csproj" />
+  </ItemGroup>
+
   <Import Project="..\..\build\Global.props" />
   <Import Project="..\..\build\Global.targets" />
+  <Import Condition="Exists('..\..\packages\Microsoft.TeamFoundationServer.ExtendedClient\build\Microsoft.TeamFoundationServer.ExtendedClient.targets')" Project="..\..\packages\Microsoft.TeamFoundationServer.ExtendedClient\build\Microsoft.TeamFoundationServer.ExtendedClient.targets" />
   <Import Project="..\..\.paket\Paket.Restore.targets" />
-
 </Project>

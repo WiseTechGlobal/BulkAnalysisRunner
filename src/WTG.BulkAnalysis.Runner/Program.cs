@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.Build.Locator;
 using WTG.BulkAnalysis.Core;
+using WTG.BulkAnalysis.TFS;
 
 namespace WTG.BulkAnalysis.Runner
 {
@@ -110,6 +111,11 @@ namespace WTG.BulkAnalysis.Runner
 
 		static CommandLineArgs ParseArguments(string[] args)
 		{
+			if (args == null || args.Length == 0)
+			{
+				args = new[] { "--help" };
+			}
+
 			var parseResult = Parser.Default.ParseArguments<CommandLineArgs>(args);
 
 			if (parseResult.Tag != ParserResultType.Parsed)

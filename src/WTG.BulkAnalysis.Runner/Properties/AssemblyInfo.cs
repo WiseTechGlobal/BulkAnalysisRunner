@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+using System;
 using System.Runtime.InteropServices;
 
 [assembly: Guid("cc915472-4531-448b-8d01-9fd9d036d451")]

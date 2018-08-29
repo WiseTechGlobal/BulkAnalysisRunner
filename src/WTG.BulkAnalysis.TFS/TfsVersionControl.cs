@@ -1,8 +1,9 @@
 using System;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using WTG.BulkAnalysis.Core;
 
-namespace WTG.BulkAnalysis.Core
+namespace WTG.BulkAnalysis.TFS
 {
 	public sealed class TfsVersionControl : IVersionControl, IDisposable
 	{
