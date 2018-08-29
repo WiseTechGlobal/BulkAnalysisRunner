@@ -54,8 +54,14 @@ namespace WTG.BulkAnalysis.Runner
 			}
 
 			using (var reportGenerator = OpenReporter(arguments))
-			using (var versionControl = TfsVersionControl.Create(new Uri(arguments.ServerUrl, UriKind.Absolute), arguments.Path))
+			using (var versionControl = TfsVersionControl.Create(arguments.Path))
 			{
+				if (versionControl == null)
+				{
+					log.WriteLine($"No workspace mapping found for '{arguments.Path}'.", LogLevel.Error);
+					return;
+				}
+
 				var context = NewContext(arguments, reportGenerator, versionControl, log, cancellationToken);
 
 				var sw = new Stopwatch();
@@ -82,7 +88,7 @@ namespace WTG.BulkAnalysis.Runner
 			}
 		}
 
-		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator reportGenerator, TfsVersionControl versionControl, ILog log, CancellationToken cancellationToken)
+		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator reportGenerator, IVersionControl versionControl, ILog log, CancellationToken cancellationToken)
 		{
 			return new RunContext(
 				arguments.Path,

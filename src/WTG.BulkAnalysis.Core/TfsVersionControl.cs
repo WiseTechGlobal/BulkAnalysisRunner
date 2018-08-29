@@ -6,19 +6,25 @@ namespace WTG.BulkAnalysis.Core
 {
 	public sealed class TfsVersionControl : IVersionControl, IDisposable
 	{
-		public static TfsVersionControl Create(Uri server, string directory)
+		public static TfsVersionControl Create(string directory)
 		{
-			var tfs = new TfsTeamProjectCollection(server);
-			tfs.EnsureAuthenticated();
-			var vcs = tfs.GetService<VersionControlServer>();
-			var workspace = vcs.TryGetWorkspace(directory);
+			var workspaceInfo = Workstation.Current.GetLocalWorkspaceInfo(directory);
 
-			if (workspace == null)
+			if (workspaceInfo != null)
 			{
-				throw new InvalidConfigurationException(FormattableString.Invariant($"No workspace mapping found for '{directory}'."));
+				var tfs = new TfsTeamProjectCollection(workspaceInfo.ServerUri);
+				tfs.EnsureAuthenticated();
+
+				var vcs = tfs.GetService<VersionControlServer>();
+				var workspace = vcs.GetWorkspace(workspaceInfo);
+
+				if (workspace != null)
+				{
+					return new TfsVersionControl(tfs, workspace);
+				}
 			}
 
-			return new TfsVersionControl(tfs, workspace);
+			return null;
 		}
 
 		TfsVersionControl(TfsTeamProjectCollection tfs, Workspace workspace)

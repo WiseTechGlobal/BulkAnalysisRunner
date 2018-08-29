@@ -16,7 +16,6 @@ namespace WTG.BulkAnalysis.Runner
 			string filter,
 			bool fix,
 			string report,
-			string serverUrl,
 			string loadDir,
 			IEnumerable<string> loadList,
 			bool pause)
@@ -26,7 +25,6 @@ namespace WTG.BulkAnalysis.Runner
 			Filter = filter;
 			Fix = fix;
 			Report = report;
-			ServerUrl = serverUrl;
 			LoadDir = loadDir;
 			LoadList = loadList;
 			Pause = pause;
@@ -46,9 +44,6 @@ namespace WTG.BulkAnalysis.Runner
 
 		[Option("report", Required = false, HelpText = "Specifies a file where detected issues should be recorded.")]
 		public string Report { get; }
-
-		[Option("tfs", Required = false, Default = "http://tfs.wtg.zone:8080/tfs/CargoWise", HelpText = "Specifies the tfs project collection uri.")]
-		public string ServerUrl { get; }
 
 		[Option("loadDir", Required = false, HelpText = "Specifies a directory where analyzer assemblies can be found.")]
 		public string LoadDir { get; }
