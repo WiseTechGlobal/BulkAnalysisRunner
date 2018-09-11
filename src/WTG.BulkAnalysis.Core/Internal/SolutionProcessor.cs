@@ -5,13 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.MSBuild;
 
 namespace WTG.BulkAnalysis.Core
 {
 	struct SolutionProcessor
 	{
-		public SolutionProcessor(RunContext context, AnalyzerCache cache, MSBuildWorkspace workspace)
+		public SolutionProcessor(RunContext context, AnalyzerCache cache, Workspace workspace)
 		{
 			this.context = context;
 			this.cache = cache;
@@ -214,7 +213,7 @@ namespace WTG.BulkAnalysis.Core
 
 		readonly RunContext context;
 		readonly AnalyzerCache cache;
-		readonly MSBuildWorkspace workspace;
+		readonly Workspace workspace;
 
 		static readonly ImmutableHashSet<string> analyzerErrorIds = ImmutableHashSet.Create("AD0001");
 	}

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
@@ -29,14 +30,11 @@ namespace WTG.BulkAnalysis.Core
 			{
 				context.Log.WriteFormatted($"* Solution: {Path.GetFileName(solutionPath)} ({counter + 1}/{numSolutions})...");
 
-				using (var workspace = MSBuildWorkspace.Create())
+				using (var workspace = await LoadSolutionIntoNewWorkspace(solutionPath, context.CancellationToken).ConfigureAwait(false))
 				{
 					ConfigureWorkspace(workspace);
 
-					var solution = await workspace.OpenSolutionAsync(
-						solutionPath,
-						cancellationToken: context.CancellationToken).ConfigureAwait(false);
-
+					var solution = workspace.CurrentSolution;
 					var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
 
 					if (csharpProjects.Length == 0)
@@ -56,7 +54,22 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		static void ConfigureWorkspace(MSBuildWorkspace workspace)
+		static async Task<Workspace> LoadSolutionIntoNewWorkspace(string path, CancellationToken cancellationToken)
+		{
+			var workspace = MSBuildWorkspace.Create();
+			try
+			{
+				await workspace.OpenSolutionAsync(path, cancellationToken: cancellationToken).ConfigureAwait(false);
+				return workspace;
+			}
+			catch
+			{
+				workspace.Dispose();
+				throw;
+			}
+		}
+
+		static void ConfigureWorkspace(Workspace workspace)
 		{
 			workspace.Options = workspace.Options
 				.WithChangedOption(UseTabsOptionKey, true)
