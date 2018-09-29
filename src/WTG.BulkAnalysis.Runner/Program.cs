@@ -94,6 +94,7 @@ namespace WTG.BulkAnalysis.Runner
 				arguments.LoadList?.ToImmutableArray() ?? ImmutableArray<string>.Empty,
 				log,
 				reportGenerator,
+				arguments.Debug,
 				cancellationToken);
 		}
 

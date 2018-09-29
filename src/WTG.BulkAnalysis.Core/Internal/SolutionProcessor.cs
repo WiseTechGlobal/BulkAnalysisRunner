@@ -176,7 +176,14 @@ namespace WTG.BulkAnalysis.Core
 			{
 				if (analyzerErrorIds.Contains(diagnostic.Id))
 				{
-					context.Log.WriteLine(diagnostic.GetMessage(), LogLevel.Error);
+					if (context.Debug)
+					{
+						context.Log.WriteLine(diagnostic.Descriptor.Description.ToString(), LogLevel.Error);
+					}
+					else
+					{
+						context.Log.WriteLine(diagnostic.GetMessage(), LogLevel.Error);
+					}
 				}
 				else if (ruleIds.Contains(diagnostic.Id))
 				{

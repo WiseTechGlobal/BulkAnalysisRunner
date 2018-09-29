@@ -18,6 +18,7 @@ namespace WTG.BulkAnalysis.Runner
 			string report,
 			string loadDir,
 			IEnumerable<string> loadList,
+			bool debug,
 			bool pause)
 		{
 			Path = path;
@@ -27,6 +28,7 @@ namespace WTG.BulkAnalysis.Runner
 			Report = report;
 			LoadDir = loadDir;
 			LoadList = loadList;
+			Debug = debug;
 			Pause = pause;
 		}
 
@@ -50,6 +52,9 @@ namespace WTG.BulkAnalysis.Runner
 
 		[Option("load", Required = false, HelpText = "Specifies the assemblies to load and search for analyzers and code fixes. If none is specified, then it will attempt to use whatever the project specifies.", Separator = ';')]
 		public IEnumerable<string> LoadList { get; }
+
+		[Option("debug", Required = false, HelpText = "Include more diagnostic information when the analyzer fails.")]
+		public bool Debug { get; }
 
 		[Option("pause", Required = false, Hidden = true)]
 		public bool Pause { get; }
