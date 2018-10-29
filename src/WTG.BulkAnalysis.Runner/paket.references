@@ -1,3 +1,5 @@
-Microsoft.Build.Locator
-WTG.DevTools.Common
 CommandLineParser
+Microsoft.Build.Locator
+StyleCop.Analyzers
+WTG.Analyzers
+WTG.DevTools.Common

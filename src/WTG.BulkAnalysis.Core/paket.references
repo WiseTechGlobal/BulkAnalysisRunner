@@ -1,2 +1,4 @@
 Microsoft.CodeAnalysis
 Microsoft.CodeAnalysis.Workspaces.MSBuild
+StyleCop.Analyzers
+WTG.Analyzers

@@ -1,1 +1,3 @@
 Microsoft.TeamFoundationServer.ExtendedClient
+StyleCop.Analyzers
+WTG.Analyzers

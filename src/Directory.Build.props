@@ -21,17 +21,19 @@
 	</PropertyGroup>
 
 	<PropertyGroup  Condition="'$(WTGIsTestProject)' != 'True'">
-		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\..\build\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
 
 	<PropertyGroup  Condition="'$(WTGIsTestProject)' == 'True'">
-		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\CodeAnalysis.Test.ruleset</CodeAnalysisRuleSet>
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\..\build\CodeAnalysis.Test.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(RunCodeAnalysis)' == 'True'">
 		<DebugType>full</DebugType>
 	</PropertyGroup>
 
-	<Import Condition="Exists('$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.props')" Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Build\build\WTG.BuildConfiguration.Build.props" />
-	<Import Condition="Exists('$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Analysis\build\WTG.BuildConfiguration.Analysis.props')" Project="$(WTGPaketPackagesRoot)\WTG.BuildConfiguration.Analysis\build\WTG.BuildConfiguration.Analysis.props" />
+	<PropertyGroup>
+		<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+	</PropertyGroup>
+
 </Project>

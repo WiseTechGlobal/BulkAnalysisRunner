@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup Label="Globals">
     <SccProjectName>SAK</SccProjectName>
@@ -26,8 +26,6 @@
     </None>
   </ItemGroup>
 
-  <Import Project="..\..\build\Global.props" />
-  <Import Project="..\..\build\Global.targets" />
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 
 </Project>

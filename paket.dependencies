@@ -13,10 +13,7 @@ framework: net47
 # DO NOT UPDATE paket.lock BY HAND!
 #
 
-nuget stylecop.analyzers
-nuget WTG.BuildConfiguration.Build
-nuget WTG.BuildConfiguration.Analysis 1.0.1
-nuget WTG.DevTools.Common
+nuget StyleCop.Analyzers
 nuget CommandLineParser
 
 nuget Microsoft.CodeAnalysis
@@ -24,3 +21,6 @@ nuget Microsoft.Build.Locator
 nuget Microsoft.CodeAnalysis.Workspaces.MSBuild
 
 nuget Microsoft.TeamFoundationServer.ExtendedClient >= 15.0
+
+nuget WTG.Analyzers
+nuget WTG.DevTools.Common
