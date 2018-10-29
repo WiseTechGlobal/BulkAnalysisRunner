@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <xsl:stylesheet
 	version="1.0"
 	xmlns="http://www.w3.org/1999/xhtml"
@@ -107,10 +107,8 @@
 		<li>
 			<a>
 				<xsl:attribute name="href">
-					<xsl:text>vsnet:</xsl:text>
+					<xsl:text>file://</xsl:text>
 					<xsl:value-of select="ancestor::r:file/@path" />
-					<xsl:text>#</xsl:text>
-					<xsl:value-of select="substring-before(@from, ',')" />
 				</xsl:attribute>
 				<xsl:value-of select="@id" />
 				<xsl:text>: </xsl:text>
