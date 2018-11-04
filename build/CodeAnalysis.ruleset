@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="Bulk Analysis Ruleset" ToolsVersion="14.0">
-  <Include Path="WTGRuleSet.ruleset" Action="Default" />
-  <Include Path="WarnAll.ruleset" Action="Default" />
+  <Include Path="StyleCopAnalyzers.ruleset" Action="Default" />
+  <Include Path="WTG.Analyzers.ruleset" Action="Default" />
+  <Include Path="FxCop.ruleset" Action="Default" />
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA2000" Action="None" />
     <Rule Id="CA2001" Action="None" />

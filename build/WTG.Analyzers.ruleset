@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="WTGAnalyzersRuleSet" ToolsVersion="14.0">
+<RuleSet Name="BulkAnalysisRunner WTG Analyzers Rule Set" ToolsVersion="14.0">
 	<Rules AnalyzerId="WTG.Analyzers" RuleNamespace="WTG.Analyzers">
 		<!-- CodingConvention -->
 		<Rule Id="WTG1001" Action="Warning" />

@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="CargoWiseRuleSet" ToolsVersion="11.0">
-  <Include Path="WTGRuleSet.FxCop.ruleset" Action="Default" />
-  <Include Path="WTGRuleSet.FxCop.Native.ruleset" Action="Default" />
-  <Include Path="WTGRuleSet.StyleCopAnalyzers.ruleset" Action="Default" />
-</RuleSet>
