@@ -42,6 +42,14 @@ namespace WTG.BulkAnalysis.Runner
 				catch (FileNotFoundException)
 				{
 				}
+				catch (IOException ex)
+				{
+					// sigh.
+					if (!(ex.InnerException is FileNotFoundException))
+					{
+						throw;
+					}
+				}
 
 				pathToBranch = Path.GetDirectoryName(pathToBranch);
 
