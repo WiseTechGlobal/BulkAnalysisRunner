@@ -2,4 +2,3 @@ CommandLineParser
 Microsoft.Build.Locator
 StyleCop.Analyzers
 WTG.Analyzers
-WTG.DevTools.Common

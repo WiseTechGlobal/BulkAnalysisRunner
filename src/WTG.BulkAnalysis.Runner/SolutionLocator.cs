@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 using WTG.BulkAnalysis.Core;
-using WTG.DevTools.Common;
 
 namespace WTG.BulkAnalysis.Runner
 {
@@ -12,11 +14,11 @@ namespace WTG.BulkAnalysis.Runner
 		public static ImmutableArray<string> Locate(string path, Func<string, bool> solutionFilter)
 		{
 			var pathToBranch = Path.GetFullPath(path);
-			var (buildXml, pathToBuildXml) = LocateBuildXml(pathToBranch);
+			var (solutions, pathToBuildXml) = LocateBuildXml(pathToBranch);
 
 			var solutionPaths =
-				from solution in buildXml.Solutions
-				let solutionPath = Path.GetFullPath(Path.Combine(pathToBuildXml, solution.Filename))
+				from solution in solutions
+				let solutionPath = Path.GetFullPath(Path.Combine(pathToBuildXml, solution))
 				where solutionPath.StartsWith(pathToBranch, StringComparison.OrdinalIgnoreCase)
 				select solutionPath;
 
@@ -28,27 +30,19 @@ namespace WTG.BulkAnalysis.Runner
 			return solutionPaths.ToImmutableArray();
 		}
 
-		static (BuildXml buildXml, string path) LocateBuildXml(string pathToBranch)
+		static (IEnumerable<string> solutions, string path) LocateBuildXml(string pathToBranch)
 		{
 			while (true)
 			{
-				var buildXmlPath = Path.Combine(pathToBranch, BuildXmlFile.FileName);
+				var buildXmlPath = Path.Combine(pathToBranch, BuildXmlFileName);
 
 				try
 				{
-					var buildXml = BuildXmlFile.Deserialize(buildXmlPath);
-					return (buildXml, pathToBranch);
+					var solutions = Load(buildXmlPath);
+					return (solutions, pathToBranch);
 				}
 				catch (FileNotFoundException)
 				{
-				}
-				catch (IOException ex)
-				{
-					// sigh.
-					if (!(ex.InnerException is FileNotFoundException))
-					{
-						throw;
-					}
 				}
 
 				pathToBranch = Path.GetDirectoryName(pathToBranch);
@@ -59,5 +53,37 @@ namespace WTG.BulkAnalysis.Runner
 				}
 			}
 		}
+
+		static IEnumerable<string> Load(string path)
+		{
+			XElement root;
+
+			try
+			{
+				root = XElement.Load(path);
+			}
+			catch (XmlException ex)
+			{
+				throw new InvalidConfigurationException("Error reading '" + path + "': " + ex.Message);
+			}
+
+			// Unfortunately we can't rely on any particular namespace as there isn't much consistency in the use cases.
+
+			if (root.Name.LocalName != "Build")
+			{
+				throw new InvalidConfigurationException("Error reading '" + path + "': Invalid root element.");
+			}
+
+			return
+				from solutionsElement in root.Elements()
+				where solutionsElement.Name.LocalName == "Solutions"
+				from solutionElement in solutionsElement.Elements()
+				where solutionElement.Name.LocalName == "Solution"
+				let filename = solutionElement.Attribute("Filename")?.Value
+				where filename != null
+				select filename;
+		}
+
+		const string BuildXmlFileName = "Build.xml";
 	}
 }

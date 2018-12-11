@@ -23,4 +23,3 @@ nuget Microsoft.CodeAnalysis.Workspaces.MSBuild
 nuget Microsoft.TeamFoundationServer.ExtendedClient >= 15.0
 
 nuget WTG.Analyzers
-nuget WTG.DevTools.Common

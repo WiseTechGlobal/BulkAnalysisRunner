@@ -216,7 +216,3 @@ NUGET
       Microsoft.IdentityModel.Clients.ActiveDirectory (>= 3.19.8)
       System.IdentityModel.Tokens.Jwt (>= 4.0.4.403061554)
     WTG.Analyzers (2.0.6)
-  remote: http://proget.wtg.zone/nuget/WTG-Internal
-    Dat.Integration (18.8.14.5)
-    WTG.DevTools.Common (18.10.15.0)
-      Dat.Integration (>= 1.0)

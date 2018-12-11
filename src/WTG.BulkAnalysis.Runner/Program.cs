@@ -57,20 +57,19 @@ namespace WTG.BulkAnalysis.Runner
 					return;
 				}
 
-				var context = NewContext(arguments, reportGenerator, versionControl, log, cancellationToken);
-
 				var sw = new Stopwatch();
 				sw.Start();
 
 				try
 				{
+					var context = NewContext(arguments, reportGenerator, versionControl, log, cancellationToken);
 					await Processor.ProcessAsync(context).ConfigureAwait(false);
 				}
 				catch (InvalidConfigurationException ex)
 				{
 					log.WriteLine(ex.Message, LogLevel.Error);
 				}
-				catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 				{
 					log.WriteLine();
 					log.WriteLine("Aborted.", LogLevel.Error);
