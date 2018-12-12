@@ -1,4 +1,5 @@
 CommandLineParser
+Microsoft.CodeAnalysis.FxCopAnalyzers
 Microsoft.Build.Locator
 StyleCop.Analyzers
 WTG.Analyzers

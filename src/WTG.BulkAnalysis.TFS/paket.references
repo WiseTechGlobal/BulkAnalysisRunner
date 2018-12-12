@@ -1,3 +1,4 @@
+Microsoft.CodeAnalysis.FxCopAnalyzers
 Microsoft.TeamFoundationServer.ExtendedClient
 StyleCop.Analyzers
 WTG.Analyzers

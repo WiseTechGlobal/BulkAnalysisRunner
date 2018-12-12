@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -178,7 +179,7 @@ namespace WTG.BulkAnalysis.Core
 				{
 					if (context.Debug)
 					{
-						context.Log.WriteLine(diagnostic.Descriptor.Description.ToString(), LogLevel.Error);
+						context.Log.WriteLine(diagnostic.Descriptor.Description.ToString(CultureInfo.CurrentCulture), LogLevel.Error);
 					}
 					else
 					{

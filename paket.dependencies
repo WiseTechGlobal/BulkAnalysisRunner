@@ -17,6 +17,7 @@ nuget StyleCop.Analyzers
 nuget CommandLineParser
 
 nuget Microsoft.CodeAnalysis
+nuget Microsoft.CodeAnalysis.FxCopAnalyzers
 nuget Microsoft.Build.Locator
 nuget Microsoft.CodeAnalysis.Workspaces.MSBuild
 
