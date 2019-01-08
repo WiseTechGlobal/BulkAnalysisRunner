@@ -53,8 +53,7 @@ namespace WTG.BulkAnalysis.Runner
 			{
 				if (versionControl == null)
 				{
-					log.WriteLine($"No workspace mapping found for '{arguments.Path}'.", LogLevel.Error);
-					return;
+					log.WriteLine($"No workspace mapping found for '{arguments.Path}'.", LogLevel.Warning);
 				}
 
 				var sw = new Stopwatch();
@@ -86,7 +85,7 @@ namespace WTG.BulkAnalysis.Runner
 		{
 			return new RunContext(
 				SolutionLocator.Locate(arguments.Path, CreateFilter(arguments)),
-				versionControl,
+				versionControl ?? NullVersionControl.Instance,
 				arguments.Fix,
 				ImmutableHashSet.CreateRange(arguments.RuleIDs),
 				arguments.LoadDir,
