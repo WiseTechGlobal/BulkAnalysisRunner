@@ -30,7 +30,7 @@ namespace WTG.BulkAnalysis.Core
 			{
 				context.Log.WriteFormatted($"* Solution: {Path.GetFileName(solutionPath)} ({counter + 1}/{numSolutions})...");
 
-				using (var workspace = await LoadSolutionIntoNewWorkspace(solutionPath, context.CancellationToken).ConfigureAwait(false))
+				using (var workspace = await LoadSolutionIntoNewWorkspace(context.Log, solutionPath, context.CancellationToken).ConfigureAwait(false))
 				{
 					ConfigureWorkspace(workspace);
 
@@ -54,12 +54,27 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		static async Task<Workspace> LoadSolutionIntoNewWorkspace(string path, CancellationToken cancellationToken)
+		static async Task<Workspace> LoadSolutionIntoNewWorkspace(ILog log, string path, CancellationToken cancellationToken)
 		{
 			var workspace = MSBuildWorkspace.Create();
 			try
 			{
 				await workspace.OpenSolutionAsync(path, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+				foreach (var diagnostic in workspace.Diagnostics)
+				{
+					switch (diagnostic.Kind)
+					{
+						case WorkspaceDiagnosticKind.Failure:
+							log.WriteLine(diagnostic.Message, LogLevel.Error);
+							break;
+
+						case WorkspaceDiagnosticKind.Warning:
+							log.WriteLine(diagnostic.Message, LogLevel.Warning);
+							break;
+					}
+				}
+
 				return workspace;
 			}
 			catch
