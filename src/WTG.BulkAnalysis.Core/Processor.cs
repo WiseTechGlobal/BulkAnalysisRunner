@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -30,24 +32,35 @@ namespace WTG.BulkAnalysis.Core
 			{
 				context.Log.WriteFormatted($"* Solution: {Path.GetFileName(solutionPath)} ({counter + 1}/{numSolutions})...");
 
-				using (var workspace = await LoadSolutionIntoNewWorkspace(context.Log, solutionPath, context.CancellationToken).ConfigureAwait(false))
+				try
 				{
-					ConfigureWorkspace(workspace);
-
-					var solution = workspace.CurrentSolution;
-					var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
-
-					if (csharpProjects.Length == 0)
+					using (var workspace = await LoadSolutionIntoNewWorkspace(context.Log, solutionPath, context.CancellationToken).ConfigureAwait(false))
 					{
-						context.Log.WriteLine("  - No C# projects! Moving on to next solution...", LogLevel.Warning);
-					}
-					else
-					{
-						context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.", LogLevel.Info);
+						ConfigureWorkspace(workspace);
 
-						var processor = new SolutionProcessor(context, cache, workspace);
-						await processor.ProcessSolutionAsync().ConfigureAwait(false);
+						var solution = workspace.CurrentSolution;
+						var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
+
+						if (csharpProjects.Length == 0)
+						{
+							context.Log.WriteLine("  - No C# projects! Moving on to next solution...", LogLevel.Warning);
+						}
+						else
+						{
+							context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.", LogLevel.Info);
+
+							var processor = new SolutionProcessor(context, cache, workspace);
+							await processor.ProcessSolutionAsync().ConfigureAwait(false);
+						}
 					}
+				}
+				catch (WorkspaceLoadException ex)
+				{
+					context.Log.WriteLine(ex.ToString(), LogLevel.Error);
+				}
+				catch (CodeFixException ex)
+				{
+					context.Log.WriteLine(ex.ToString(), LogLevel.Error);
 				}
 
 				counter++;
@@ -59,7 +72,14 @@ namespace WTG.BulkAnalysis.Core
 			var workspace = MSBuildWorkspace.Create();
 			try
 			{
-				await workspace.OpenSolutionAsync(path, cancellationToken: cancellationToken).ConfigureAwait(false);
+				try
+				{
+					await workspace.OpenSolutionAsync(path, cancellationToken: cancellationToken).ConfigureAwait(false);
+				}
+				catch (Exception ex)
+				{
+					throw new WorkspaceLoadException("Error loading '" + path + "'.", ex);
+				}
 
 				foreach (var diagnostic in workspace.Diagnostics)
 				{

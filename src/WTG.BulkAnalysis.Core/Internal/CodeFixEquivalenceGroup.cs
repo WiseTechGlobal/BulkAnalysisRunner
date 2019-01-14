@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -104,27 +104,41 @@ namespace WTG.BulkAnalysis.Core
 				diagnosticsProvider,
 				cancellationToken);
 
-			var action = await fixAllProvider
-				.GetFixAsync(context)
-				.ConfigureAwait(false);
+			try
+			{
+				var action = await fixAllProvider
+					.GetFixAsync(context)
+					.ConfigureAwait(false);
 
-			return await action
-				.GetOperationsAsync(cancellationToken)
-				.ConfigureAwait(false);
+				return await action
+					.GetOperationsAsync(cancellationToken)
+					.ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				throw new CodeFixException("Exception running code fixer.", ex);
+			}
 		}
 
 		static async Task<IEnumerable<CodeAction>> GetFixesAsync(Solution solution, CodeFixProvider codeFixProvider, Diagnostic diagnostic, CancellationToken cancellationToken)
 		{
 			var codeActions = new List<CodeAction>();
-			await codeFixProvider
-				.RegisterCodeFixesAsync(
-					new CodeFixContext(
-						solution.GetDocument(diagnostic.Location.SourceTree),
-						diagnostic,
-						(a, d) => codeActions.Add(a),
-						cancellationToken))
-				.ConfigureAwait(false);
-			return codeActions;
+			try
+			{
+				await codeFixProvider
+					.RegisterCodeFixesAsync(
+						new CodeFixContext(
+							solution.GetDocument(diagnostic.Location.SourceTree),
+							diagnostic,
+							(a, d) => codeActions.Add(a),
+							cancellationToken))
+					.ConfigureAwait(false);
+				return codeActions;
+			}
+			catch (Exception ex)
+			{
+				throw new CodeFixException("Exception collecting code fixes.", ex);
+			}
 		}
 
 		readonly string codeFixEquivalenceKey;
