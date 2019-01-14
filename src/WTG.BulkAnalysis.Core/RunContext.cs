@@ -14,6 +14,7 @@ namespace WTG.BulkAnalysis.Core
 			ImmutableArray<string> loadList,
 			ILog log,
 			IReportGenerator reporter,
+			string configuration,
 			bool debug,
 			CancellationToken cancellationToken)
 		{
@@ -25,6 +26,7 @@ namespace WTG.BulkAnalysis.Core
 			LoadList = loadList;
 			Log = log;
 			Reporter = reporter;
+			Configuration = configuration;
 			Debug = debug;
 			CancellationToken = cancellationToken;
 		}
@@ -37,6 +39,7 @@ namespace WTG.BulkAnalysis.Core
 		public ImmutableArray<string> LoadList { get; }
 		public ILog Log { get; }
 		public IReportGenerator Reporter { get; }
+		public string Configuration { get; }
 		public bool Debug { get; }
 		public CancellationToken CancellationToken { get; }
 	}

@@ -34,7 +34,7 @@ namespace WTG.BulkAnalysis.Core
 
 				try
 				{
-					using (var workspace = await LoadSolutionIntoNewWorkspace(context.Log, solutionPath, context.CancellationToken).ConfigureAwait(false))
+					using (var workspace = await LoadSolutionIntoNewWorkspace(context, solutionPath, context.CancellationToken).ConfigureAwait(false))
 					{
 						ConfigureWorkspace(workspace);
 
@@ -67,9 +67,15 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		static async Task<Workspace> LoadSolutionIntoNewWorkspace(ILog log, string path, CancellationToken cancellationToken)
+		static async Task<Workspace> LoadSolutionIntoNewWorkspace(RunContext context, string path, CancellationToken cancellationToken)
 		{
-			var workspace = MSBuildWorkspace.Create();
+			var properties = new Dictionary<string, string>()
+			{
+				{ "Configuration", context.Configuration },
+			};
+
+			var workspace = MSBuildWorkspace.Create(properties);
+
 			try
 			{
 				try
@@ -86,11 +92,11 @@ namespace WTG.BulkAnalysis.Core
 					switch (diagnostic.Kind)
 					{
 						case WorkspaceDiagnosticKind.Failure:
-							log.WriteLine(diagnostic.Message, LogLevel.Error);
+							context.Log.WriteLine(diagnostic.Message, LogLevel.Error);
 							break;
 
 						case WorkspaceDiagnosticKind.Warning:
-							log.WriteLine(diagnostic.Message, LogLevel.Warning);
+							context.Log.WriteLine(diagnostic.Message, LogLevel.Warning);
 							break;
 					}
 				}
