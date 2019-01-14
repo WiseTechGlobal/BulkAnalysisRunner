@@ -82,6 +82,10 @@ namespace WTG.BulkAnalysis.Core
 				{
 					await workspace.OpenSolutionAsync(path, cancellationToken: cancellationToken).ConfigureAwait(false);
 				}
+				catch (OperationCanceledException)
+				{
+					throw;
+				}
 				catch (Exception ex)
 				{
 					throw new WorkspaceLoadException("Error loading '" + path + "'.", ex);

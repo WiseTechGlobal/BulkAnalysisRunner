@@ -114,6 +114,10 @@ namespace WTG.BulkAnalysis.Core
 					.GetOperationsAsync(cancellationToken)
 					.ConfigureAwait(false);
 			}
+			catch (OperationCanceledException)
+			{
+				throw;
+			}
 			catch (Exception ex)
 			{
 				throw new CodeFixException("Exception running code fixer.", ex);
@@ -134,6 +138,10 @@ namespace WTG.BulkAnalysis.Core
 							cancellationToken))
 					.ConfigureAwait(false);
 				return codeActions;
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
 			}
 			catch (Exception ex)
 			{
