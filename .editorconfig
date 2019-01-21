@@ -1,4 +1,4 @@
-﻿# http://editorconfig.org/#file-format-details
+# http://editorconfig.org/#file-format-details
 # https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
 # https://github.com/dotnet/roslyn/pull/15020
 
@@ -111,6 +111,6 @@ csharp_space_between_square_brackets = false
 indent_style = space
 indent_size = 2
 
-[*.yaml]
-indent_style = space
-indent_size = 2
+[*.csproj]
+charset = utf-8-bom
+insert_final_newline = false
