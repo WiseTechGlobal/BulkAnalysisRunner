@@ -14,14 +14,24 @@ namespace WTG.BulkAnalysis.TFS
 			if (workspaceInfo != null)
 			{
 				var tfs = new TfsTeamProjectCollection(workspaceInfo.ServerUri);
-				tfs.EnsureAuthenticated();
 
-				var vcs = tfs.GetService<VersionControlServer>();
-				var workspace = vcs.GetWorkspace(workspaceInfo);
-
-				if (workspace != null)
+				try
 				{
-					return new TfsVersionControl(tfs, workspace);
+					tfs.EnsureAuthenticated();
+
+					var vcs = tfs.GetService<VersionControlServer>();
+					var workspace = vcs.GetWorkspace(workspaceInfo);
+
+					if (workspace != null)
+					{
+						var result = new TfsVersionControl(tfs, workspace);
+						tfs = null;
+						return result;
+					}
+				}
+				finally
+				{
+					tfs?.Dispose();
 				}
 			}
 
