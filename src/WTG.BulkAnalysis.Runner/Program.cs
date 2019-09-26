@@ -40,7 +40,7 @@ namespace WTG.BulkAnalysis.Runner
 
 		static async Task MainAsync(CommandLineArgs arguments, ILog log, CancellationToken cancellationToken)
 		{
-			MSBuildLocator.RegisterDefaults();
+			RegisterMSBuild(log);
 
 			if (arguments.Pause)
 			{
@@ -79,6 +79,27 @@ namespace WTG.BulkAnalysis.Runner
 					log.WriteFormatted($"Time taken: {sw.Elapsed.TotalSeconds} seconds");
 				}
 			}
+		}
+
+		static void RegisterMSBuild(ILog log)
+		{
+			VisualStudioInstance selected = null;
+
+			log.WriteLine("Checking for VS instances:");
+
+			foreach (var instance in MSBuildLocator.QueryVisualStudioInstances())
+			{
+				log.WriteFormatted($"  {instance.Version}");
+
+				if (selected == null || selected.Version < instance.Version)
+				{
+					selected = instance;
+				}
+			}
+
+			log.WriteFormatted($"Selected: {selected.Version}");
+
+			MSBuildLocator.RegisterInstance(selected);
 		}
 
 		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator reportGenerator, IVersionControl versionControl, ILog log, CancellationToken cancellationToken)
