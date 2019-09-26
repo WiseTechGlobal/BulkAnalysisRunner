@@ -48,8 +48,20 @@ namespace WTG.BulkAnalysis.Runner
 				Console.ReadKey();
 			}
 
+			Uri tfsServer;
+
+			if (arguments.TfsServer == null)
+			{
+				tfsServer = null;
+			}
+			else if (!Uri.TryCreate(arguments.TfsServer, UriKind.Absolute, out tfsServer))
+			{
+				log.WriteLine("Invalid tfs server uri.", LogLevel.Error);
+				return;
+			}
+
 			using (var reportGenerator = OpenReporter(arguments))
-			using (var versionControl = TfsVersionControl.Create(arguments.Path))
+			using (var versionControl = TfsVersionControl.Create(arguments.Path, tfsServer))
 			{
 				if (versionControl == null)
 				{

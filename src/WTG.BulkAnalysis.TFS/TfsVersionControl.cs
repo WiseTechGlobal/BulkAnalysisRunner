@@ -7,35 +7,58 @@ namespace WTG.BulkAnalysis.TFS
 {
 	public sealed class TfsVersionControl : IVersionControl, IDisposable
 	{
-		public static TfsVersionControl Create(string directory)
+		public static TfsVersionControl Create(string directory, Uri tfsServer)
 		{
 			var workspaceInfo = Workstation.Current.GetLocalWorkspaceInfo(directory);
 
-			if (workspaceInfo != null)
+			if (workspaceInfo == null)
 			{
-				var tfs = new TfsTeamProjectCollection(workspaceInfo.ServerUri);
-
-				try
+				if (tfsServer == null)
 				{
-					tfs.EnsureAuthenticated();
-
-					var vcs = tfs.GetService<VersionControlServer>();
-					var workspace = vcs.GetWorkspace(workspaceInfo);
-
-					if (workspace != null)
-					{
-						var result = new TfsVersionControl(tfs, workspace);
-						tfs = null;
-						return result;
-					}
+					return null;
 				}
-				finally
+
+				EnsureUpdatedWorkspaceInfoCache(tfsServer);
+				workspaceInfo = Workstation.Current.GetLocalWorkspaceInfo(directory);
+
+				if (workspaceInfo == null)
 				{
-					tfs?.Dispose();
+					return null;
 				}
 			}
 
+			var tfs = new TfsTeamProjectCollection(workspaceInfo.ServerUri);
+
+			try
+			{
+				tfs.EnsureAuthenticated();
+
+				var vcs = tfs.GetService<VersionControlServer>();
+				var workspace = vcs.GetWorkspace(workspaceInfo);
+
+				if (workspace != null)
+				{
+					var result = new TfsVersionControl(tfs, workspace);
+					tfs = null;
+					return result;
+				}
+			}
+			finally
+			{
+				tfs?.Dispose();
+			}
+
 			return null;
+		}
+
+		static void EnsureUpdatedWorkspaceInfoCache(Uri tfsServer)
+		{
+			using (var tfs = new TfsTeamProjectCollection(tfsServer))
+			{
+				tfs.EnsureAuthenticated();
+				var vcs = tfs.GetService<VersionControlServer>();
+				Workstation.Current.EnsureUpdateWorkspaceInfoCache(vcs, vcs.AuthorizedUser);
+			}
 		}
 
 		TfsVersionControl(TfsTeamProjectCollection tfs, Workspace workspace)
