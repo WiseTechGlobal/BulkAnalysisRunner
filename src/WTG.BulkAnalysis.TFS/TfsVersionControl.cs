@@ -7,7 +7,7 @@ namespace WTG.BulkAnalysis.TFS
 {
 	public sealed class TfsVersionControl : IVersionControl, IDisposable
 	{
-		public static TfsVersionControl Create(string directory, Uri tfsServer)
+		public static TfsVersionControl? Create(string directory, Uri? tfsServer)
 		{
 			var workspaceInfo = Workstation.Current.GetLocalWorkspaceInfo(directory);
 
@@ -38,14 +38,15 @@ namespace WTG.BulkAnalysis.TFS
 
 				if (workspace != null)
 				{
-					var result = new TfsVersionControl(tfs, workspace);
-					tfs = null;
-					return result;
+					return new TfsVersionControl(tfs, workspace);
 				}
+
+				tfs.Dispose();
 			}
-			finally
+			catch
 			{
-				tfs?.Dispose();
+				tfs.Dispose();
+				throw;
 			}
 
 			return null;
@@ -53,12 +54,10 @@ namespace WTG.BulkAnalysis.TFS
 
 		static void EnsureUpdatedWorkspaceInfoCache(Uri tfsServer)
 		{
-			using (var tfs = new TfsTeamProjectCollection(tfsServer))
-			{
-				tfs.EnsureAuthenticated();
-				var vcs = tfs.GetService<VersionControlServer>();
-				Workstation.Current.EnsureUpdateWorkspaceInfoCache(vcs, vcs.AuthorizedUser);
-			}
+			using var tfs = new TfsTeamProjectCollection(tfsServer);
+			tfs.EnsureAuthenticated();
+			var vcs = tfs.GetService<VersionControlServer>();
+			Workstation.Current.EnsureUpdateWorkspaceInfoCache(vcs, vcs.AuthorizedUser);
 		}
 
 		TfsVersionControl(TfsTeamProjectCollection tfs, Workspace workspace)

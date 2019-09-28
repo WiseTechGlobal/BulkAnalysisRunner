@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -42,7 +42,7 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		public static FileChangeSet Extract(Solution oldSolution, ImmutableArray<CodeActionOperation> operations)
+		public static FileChangeSet? Extract(Solution oldSolution, ImmutableArray<CodeActionOperation> operations)
 		{
 			var newSolution = operations.OfType<ApplyChangesOperation>().SingleOrDefault()?.ChangedSolution;
 
@@ -102,7 +102,12 @@ namespace WTG.BulkAnalysis.Core
 				projectChange.GetRemovedMetadataReferences().Any() ||
 				projectChange.GetRemovedProjectReferences().Any())
 			{
-				filesToEdit.Add(projectChange.OldProject.FilePath);
+				var filePath = projectChange.OldProject.FilePath;
+
+				if (filePath != null)
+				{
+					filesToEdit.Add(filePath);
+				}
 			}
 		}
 
@@ -124,13 +129,13 @@ namespace WTG.BulkAnalysis.Core
 			foreach (var change in documentIds)
 			{
 				var document = project.GetDocument(change);
-				yield return document.FilePath;
+				yield return document!.FilePath;
 			}
 
 			foreach (var change in additionalIds)
 			{
 				var document = project.GetAdditionalDocument(change);
-				yield return document.FilePath;
+				yield return document!.FilePath;
 			}
 		}
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +13,6 @@ namespace WTG.BulkAnalysis.Runner
 {
 	sealed class XmlReportGenerator : IReportGenerator, IDisposable
 	{
-		[SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
 		public static XmlReportGenerator New(string path)
 		{
 			return New(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read));
@@ -34,7 +33,7 @@ namespace WTG.BulkAnalysis.Runner
 		XmlReportGenerator(XmlWriter writer)
 		{
 			this.writer = writer;
-			WriteStart();
+			WriteStart(writer);
 		}
 
 		public void Report(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)
@@ -53,7 +52,7 @@ namespace WTG.BulkAnalysis.Runner
 				{
 					var project = solution.GetProject(pair.Key);
 
-					WriteProjectElement(project, pair.Value);
+					WriteProjectElement(writer, project!, pair.Value);
 				}
 
 				writer.WriteEndElement();
@@ -64,28 +63,28 @@ namespace WTG.BulkAnalysis.Runner
 		{
 			if (writer != null)
 			{
-				WriteEnd();
+				WriteEnd(writer);
 				writer.Flush();
 				writer.Close();
 				writer = null;
 			}
 		}
 
-		void WriteStart()
+		static void WriteStart(XmlWriter writer)
 		{
 			writer.WriteStartDocument();
 			writer.WriteProcessingInstruction("xml-stylesheet", "type=\"text/xsl\" href=\"analysis.xslt\"");
 			writer.WriteStartElement("report", XmlNamespace);
 		}
 
-		void WriteEnd()
+		static void WriteEnd(XmlWriter writer)
 		{
 			writer.WriteEndElement();
 			writer.WriteEndDocument();
 			writer.Flush();
 		}
 
-		void WriteProjectElement(Project project, ImmutableArray<Diagnostic> diagnostics)
+		static void WriteProjectElement(XmlWriter writer, Project project, ImmutableArray<Diagnostic> diagnostics)
 		{
 			writer.WriteStartElement("project");
 			writer.WriteAttributeString("name", project.Name);
@@ -94,13 +93,13 @@ namespace WTG.BulkAnalysis.Runner
 
 			foreach (var g in groupedDiagnostics)
 			{
-				WriteFileElement(g.Key, g);
+				WriteFileElement(writer, g.Key, g);
 			}
 
 			writer.WriteEndElement();
 		}
 
-		void WriteFileElement(string path, IEnumerable<Diagnostic> diagnostics)
+		static void WriteFileElement(XmlWriter writer, string path, IEnumerable<Diagnostic> diagnostics)
 		{
 			writer.WriteStartElement("file");
 
@@ -111,13 +110,13 @@ namespace WTG.BulkAnalysis.Runner
 
 			foreach (var diagnostic in diagnostics)
 			{
-				WriteDiagnosticElement(diagnostic);
+				WriteDiagnosticElement(writer, diagnostic);
 			}
 
 			writer.WriteEndElement();
 		}
 
-		void WriteDiagnosticElement(Diagnostic diagnostic)
+		static void WriteDiagnosticElement(XmlWriter writer, Diagnostic diagnostic)
 		{
 			writer.WriteStartElement("diagnostic");
 			writer.WriteAttributeString("id", diagnostic.Id);
@@ -132,7 +131,7 @@ namespace WTG.BulkAnalysis.Runner
 
 		static string FormatPosition(LinePosition pos) => (pos.Line + 1) + "," + (pos.Character + 1);
 
-		XmlWriter writer;
+		XmlWriter? writer;
 
 		const string XmlNamespace = "http://wisetechglobal.com/staticanalysis/2017/04/09/analysis.xsd";
 	}

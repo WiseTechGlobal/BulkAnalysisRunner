@@ -39,24 +39,22 @@ namespace WTG.BulkAnalysis.Core
 
 				try
 				{
-					using (var workspace = await LoadSolutionIntoNewWorkspace(context, solutionPath, context.CancellationToken).ConfigureAwait(false))
+					using var workspace = await LoadSolutionIntoNewWorkspace(context, solutionPath, context.CancellationToken).ConfigureAwait(false);
+					ConfigureWorkspace(workspace);
+
+					var solution = workspace.CurrentSolution;
+					var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
+
+					if (csharpProjects.Length == 0)
 					{
-						ConfigureWorkspace(workspace);
+						context.Log.WriteLine("  - No C# projects! Moving on to next solution...", LogLevel.Warning);
+					}
+					else
+					{
+						context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.", LogLevel.Info);
 
-						var solution = workspace.CurrentSolution;
-						var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToArray();
-
-						if (csharpProjects.Length == 0)
-						{
-							context.Log.WriteLine("  - No C# projects! Moving on to next solution...", LogLevel.Warning);
-						}
-						else
-						{
-							context.Log.WriteFormatted($"  - Found {csharpProjects.Length} projects.", LogLevel.Info);
-
-							var processor = new SolutionProcessor(context, cache, workspace);
-							await processor.ProcessSolutionAsync().ConfigureAwait(false);
-						}
+						var processor = new SolutionProcessor(context, cache, workspace);
+						await processor.ProcessSolutionAsync().ConfigureAwait(false);
 					}
 				}
 				catch (WorkspaceLoadException ex)

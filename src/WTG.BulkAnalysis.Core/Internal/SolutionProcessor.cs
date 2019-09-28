@@ -142,22 +142,26 @@ namespace WTG.BulkAnalysis.Core
 
 		async Task<ImmutableArray<Diagnostic>> GetProjectAnalyzerDiagnosticsAsync(Project project, ImmutableArray<DiagnosticAnalyzer> analyzers)
 		{
-			var modifiedSpecificDiagnosticOptions = project
-				.CompilationOptions
-				.SpecificDiagnosticOptions;
+			var options = project.CompilationOptions;
 
-			foreach (var id in analyzerErrorIds)
+			if (options != null)
 			{
-				modifiedSpecificDiagnosticOptions = modifiedSpecificDiagnosticOptions.Add(id, ReportDiagnostic.Error);
+				var modifiedSpecificDiagnosticOptions = options.SpecificDiagnosticOptions;
+
+				foreach (var id in analyzerErrorIds)
+				{
+					modifiedSpecificDiagnosticOptions = modifiedSpecificDiagnosticOptions.Add(id, ReportDiagnostic.Error);
+				}
+
+				var modifiedCompilationOptions = options
+					.WithSpecificDiagnosticOptions(modifiedSpecificDiagnosticOptions)
+					.WithWarningLevel(4);
+
+				project = project
+					.WithCompilationOptions(modifiedCompilationOptions);
 			}
 
-			var modifiedCompilationOptions = project
-				.CompilationOptions
-				.WithSpecificDiagnosticOptions(modifiedSpecificDiagnosticOptions)
-				.WithWarningLevel(4);
-
 			var compilation = await project
-				.WithCompilationOptions(modifiedCompilationOptions)
 				.GetCompilationAsync(context.CancellationToken)
 				.ConfigureAwait(false);
 
@@ -171,7 +175,7 @@ namespace WTG.BulkAnalysis.Core
 				.ConfigureAwait(false);
 
 			var ruleIds = context.RuleIds;
-			ImmutableArray<Diagnostic>.Builder builder = null;
+			ImmutableArray<Diagnostic>.Builder? builder = null;
 
 			foreach (var diagnostic in diagnostics)
 			{

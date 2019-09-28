@@ -13,7 +13,7 @@ namespace WTG.BulkAnalysis.Core
 			string loadDir,
 			ImmutableArray<string> loadList,
 			ILog log,
-			IReportGenerator reporter,
+			IReportGenerator? reporter,
 			string configuration,
 			bool debug,
 			CancellationToken cancellationToken)
@@ -38,7 +38,7 @@ namespace WTG.BulkAnalysis.Core
 		public string LoadDir { get; }
 		public ImmutableArray<string> LoadList { get; }
 		public ILog Log { get; }
-		public IReportGenerator Reporter { get; }
+		public IReportGenerator? Reporter { get; }
 		public string Configuration { get; }
 		public bool Debug { get; }
 		public CancellationToken CancellationToken { get; }

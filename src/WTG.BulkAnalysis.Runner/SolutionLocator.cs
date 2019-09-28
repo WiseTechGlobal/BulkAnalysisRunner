@@ -11,7 +11,7 @@ namespace WTG.BulkAnalysis.Runner
 {
 	static class SolutionLocator
 	{
-		public static ImmutableArray<string> Locate(string path, Func<string, bool> solutionFilter)
+		public static ImmutableArray<string> Locate(string path, Func<string, bool>? solutionFilter)
 		{
 			var pathToBranch = Path.GetFullPath(path);
 			var (solutions, pathToBuildXml) = LocateBuildXml(pathToBranch);

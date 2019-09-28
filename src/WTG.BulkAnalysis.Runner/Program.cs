@@ -26,21 +26,23 @@ namespace WTG.BulkAnalysis.Runner
 
 			AppDomain.CurrentDomain.AssemblyResolve += OnAppDomainAssemblyResolve;
 
-			using (var cts = new CancellationTokenSource())
-			{
-				Console.CancelKeyPress += (sender, e) =>
-				{
-					e.Cancel = true;
-					cts.Cancel();
-				};
+			using var cts = new CancellationTokenSource();
 
-				await MainAsync(arguments, ConsoleLog.Instance, cts.Token).ConfigureAwait(false);
-			}
+			Console.CancelKeyPress += (sender, e) =>
+			{
+				e.Cancel = true;
+				cts.Cancel();
+			};
+
+			await MainAsync(arguments, ConsoleLog.Instance, cts.Token).ConfigureAwait(false);
 		}
 
 		static async Task MainAsync(CommandLineArgs arguments, ILog log, CancellationToken cancellationToken)
 		{
-			RegisterMSBuild(log);
+			if (!RegisterMSBuild(log))
+			{
+				return;
+			}
 
 			if (arguments.Pause)
 			{
@@ -48,7 +50,7 @@ namespace WTG.BulkAnalysis.Runner
 				Console.ReadKey();
 			}
 
-			Uri tfsServer;
+			Uri? tfsServer;
 
 			if (arguments.TfsServer == null)
 			{
@@ -60,42 +62,41 @@ namespace WTG.BulkAnalysis.Runner
 				return;
 			}
 
-			using (var reportGenerator = OpenReporter(arguments))
-			using (var versionControl = TfsVersionControl.Create(arguments.Path, tfsServer))
+			using var reportGenerator = OpenReporter(arguments);
+			using var versionControl = TfsVersionControl.Create(arguments.Path, tfsServer);
+
+			if (versionControl == null)
 			{
-				if (versionControl == null)
-				{
-					log.WriteLine($"No workspace mapping found for '{arguments.Path}'.", LogLevel.Warning);
-				}
+				log.WriteLine($"No workspace mapping found for '{arguments.Path}'.", LogLevel.Warning);
+			}
 
-				var sw = new Stopwatch();
-				sw.Start();
+			var sw = new Stopwatch();
+			sw.Start();
 
-				try
-				{
-					var context = NewContext(arguments, reportGenerator, versionControl, log, cancellationToken);
-					await Processor.ProcessAsync(context).ConfigureAwait(false);
-				}
-				catch (InvalidConfigurationException ex)
-				{
-					log.WriteLine(ex.Message, LogLevel.Error);
-				}
-				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-				{
-					log.WriteLine();
-					log.WriteLine("Aborted.", LogLevel.Error);
-				}
-				finally
-				{
-					sw.Stop();
-					log.WriteFormatted($"Time taken: {sw.Elapsed.TotalSeconds} seconds");
-				}
+			try
+			{
+				var context = NewContext(arguments, reportGenerator, versionControl, log, cancellationToken);
+				await Processor.ProcessAsync(context).ConfigureAwait(false);
+			}
+			catch (InvalidConfigurationException ex)
+			{
+				log.WriteLine(ex.Message, LogLevel.Error);
+			}
+			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+			{
+				log.WriteLine();
+				log.WriteLine("Aborted.", LogLevel.Error);
+			}
+			finally
+			{
+				sw.Stop();
+				log.WriteFormatted($"Time taken: {sw.Elapsed.TotalSeconds} seconds");
 			}
 		}
 
-		static void RegisterMSBuild(ILog log)
+		static bool RegisterMSBuild(ILog log)
 		{
-			VisualStudioInstance selected = null;
+			VisualStudioInstance? selected = null;
 
 			log.WriteLine("Checking for VS instances:");
 
@@ -109,12 +110,20 @@ namespace WTG.BulkAnalysis.Runner
 				}
 			}
 
-			log.WriteFormatted($"Selected: {selected.Version}");
-
-			MSBuildLocator.RegisterInstance(selected);
+			if (selected != null)
+			{
+				log.WriteFormatted($"Selected: {selected.Version}");
+				MSBuildLocator.RegisterInstance(selected);
+				return true;
+			}
+			else
+			{
+				log.WriteFormatted($"No instances found!", LogLevel.Error);
+				return false;
+			}
 		}
 
-		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator reportGenerator, IVersionControl versionControl, ILog log, CancellationToken cancellationToken)
+		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator? reportGenerator, IVersionControl? versionControl, ILog log, CancellationToken cancellationToken)
 		{
 			return new RunContext(
 				SolutionLocator.Locate(arguments.Path, CreateFilter(arguments)),
@@ -130,12 +139,12 @@ namespace WTG.BulkAnalysis.Runner
 				cancellationToken);
 		}
 
-		static XmlReportGenerator OpenReporter(CommandLineArgs arguments)
+		static XmlReportGenerator? OpenReporter(CommandLineArgs arguments)
 		{
 			return string.IsNullOrEmpty(arguments.Report) ? null : XmlReportGenerator.New(arguments.Report);
 		}
 
-		static CommandLineArgs ParseArguments(string[] args)
+		static CommandLineArgs? ParseArguments(string[] args)
 		{
 			if (args == null || args.Length == 0)
 			{
@@ -152,7 +161,7 @@ namespace WTG.BulkAnalysis.Runner
 			return ((Parsed<CommandLineArgs>)parseResult).Value;
 		}
 
-		static Assembly OnAppDomainAssemblyResolve(object sender, ResolveEventArgs args)
+		static Assembly? OnAppDomainAssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			if (args.RequestingAssembly == null)
 			{
@@ -165,7 +174,7 @@ namespace WTG.BulkAnalysis.Runner
 			return Assembly.LoadFile(assemblyPath);
 		}
 
-		static Func<string, bool> CreateFilter(CommandLineArgs arguments)
+		static Func<string, bool>? CreateFilter(CommandLineArgs arguments)
 		{
 			if (arguments.Filter == null)
 			{
