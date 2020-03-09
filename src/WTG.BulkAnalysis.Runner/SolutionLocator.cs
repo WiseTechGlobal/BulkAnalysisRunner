@@ -44,6 +44,10 @@ namespace WTG.BulkAnalysis.Runner
 				catch (FileNotFoundException)
 				{
 				}
+				catch (DirectoryNotFoundException)
+				{
+					throw new InvalidConfigurationException("Directory does not exist, '" + pathToBranch + "'.");
+				}
 
 				pathToBranch = Path.GetDirectoryName(pathToBranch);
 
