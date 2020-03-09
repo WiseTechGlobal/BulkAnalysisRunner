@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -33,7 +33,8 @@ namespace WTG.BulkAnalysis.Core
 
 		public override Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
 		{
-			if (documentDiagnostics.TryGetValue(document.Project.Id, out var projectDocumentDiagnostics) &&
+			if (document.FilePath != null &&
+				documentDiagnostics.TryGetValue(document.Project.Id, out var projectDocumentDiagnostics) &&
 				projectDocumentDiagnostics.TryGetValue(document.FilePath, out var diagnostics))
 			{
 				return Task.FromResult(diagnostics.AsEnumerable());
