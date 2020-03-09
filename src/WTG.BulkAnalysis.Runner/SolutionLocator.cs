@@ -30,7 +30,7 @@ namespace WTG.BulkAnalysis.Runner
 			return solutionPaths.ToImmutableArray();
 		}
 
-		static (IEnumerable<string> solutions, string path) LocateBuildXml(string pathToBranch)
+		static (IEnumerable<string> Solutions, string Path) LocateBuildXml(string pathToBranch)
 		{
 			while (true)
 			{
