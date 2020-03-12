@@ -7,9 +7,6 @@ configuration:
   - Debug
   - Release
 
-environment:
-  WTG_ANALYZERS_VERSION: 3.3.0
-
 init:
   - git config --global core.autocrlf true
 
