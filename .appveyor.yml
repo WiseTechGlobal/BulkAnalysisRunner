@@ -1,0 +1,22 @@
+version: 3.3.0.{build}
+
+skip_branch_with_pr: true
+os: Visual Studio 2019
+
+configuration:
+  - Debug
+  - Release
+
+environment:
+  WTG_ANALYZERS_VERSION: 3.3.0
+
+init:
+  - git config --global core.autocrlf true
+
+before_build:
+  - dotnet restore src
+
+build:
+  parallel: true
+  project: src\BulkAnalysisRunner.sln
+  verbosity: minimal
