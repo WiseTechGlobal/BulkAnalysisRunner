@@ -21,4 +21,9 @@
     <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)build\stylecop.json">
+      <Link>Properties\stylecop.json</Link>
+    </AdditionalFiles>
+  </ItemGroup>
 </Project>
