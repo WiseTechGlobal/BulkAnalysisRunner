@@ -9,7 +9,7 @@
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
 
-    <Version>3.3.0.0</Version>
+    <Version>3.4.0.0</Version>
 
     <Company>WiseTech Global Pty Ltd</Company>
     <Product>Bulk Analysis Runner</Product>
@@ -21,4 +21,9 @@
     <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)build\stylecop.json">
+      <Link>Properties\stylecop.json</Link>
+    </AdditionalFiles>
+  </ItemGroup>
 </Project>

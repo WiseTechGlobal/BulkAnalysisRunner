@@ -108,8 +108,13 @@ csharp_space_between_parentheses = false
 csharp_space_between_square_brackets = false
 
 # XML-based project files
-[*.{csproj,vcxproj,vcxproj.filters,fsproj,nativeproj,locproj,ruleset,props,targets}]
+[*.{csproj,ruleset,props,targets}]
 indent_style = space
 indent_size = 2
 charset = utf-8-bom
 insert_final_newline = false
+
+# json files
+[*.json]
+indent_style = space
+indent_size = 2

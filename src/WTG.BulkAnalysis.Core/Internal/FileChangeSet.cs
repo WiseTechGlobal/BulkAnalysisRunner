@@ -115,12 +115,18 @@ namespace WTG.BulkAnalysis.Core
 		{
 			foreach (var document in project.Documents)
 			{
-				yield return document.FilePath;
+				if (document.FilePath != null)
+				{
+					yield return document.FilePath;
+				}
 			}
 
 			foreach (var document in project.AdditionalDocuments)
 			{
-				yield return document.FilePath;
+				if (document.FilePath != null)
+				{
+					yield return document.FilePath;
+				}
 			}
 		}
 
@@ -129,13 +135,21 @@ namespace WTG.BulkAnalysis.Core
 			foreach (var change in documentIds)
 			{
 				var document = project.GetDocument(change);
-				yield return document!.FilePath;
+
+				if (document?.FilePath != null)
+				{
+					yield return document.FilePath;
+				}
 			}
 
 			foreach (var change in additionalIds)
 			{
 				var document = project.GetAdditionalDocument(change);
-				yield return document!.FilePath;
+
+				if (document?.FilePath != null)
+				{
+					yield return document.FilePath;
+				}
 			}
 		}
 
