@@ -10,32 +10,40 @@ namespace WTG.BulkAnalysis.Core
 {
 	sealed class TesterDiagnosticProvider : FixAllContext.DiagnosticProvider
 	{
-		public TesterDiagnosticProvider(ImmutableDictionary<ProjectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>>> documentDiagnostics, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> projectDiagnostics)
+		public TesterDiagnosticProvider(ProjectId projectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>> documentDiagnostics, ImmutableArray<Diagnostic> projectDiagnostics)
 		{
+			this.projectId = projectId;
 			this.documentDiagnostics = documentDiagnostics;
 			this.projectDiagnostics = projectDiagnostics;
 		}
 
 		public override Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
 		{
-			if (!projectDiagnostics.TryGetValue(project.Id, out var filteredProjectDiagnostics))
+			if (projectId != project.Id)
 			{
-				filteredProjectDiagnostics = ImmutableArray<Diagnostic>.Empty;
+				return Task.FromResult(Enumerable.Empty<Diagnostic>());
 			}
 
-			if (!documentDiagnostics.TryGetValue(project.Id, out var filteredDocumentDiagnostics))
+			if (documentDiagnostics.Count == 0)
 			{
-				return Task.FromResult(filteredProjectDiagnostics.AsEnumerable());
+				return Task.FromResult(projectDiagnostics.AsEnumerable());
 			}
 
-			return Task.FromResult(filteredProjectDiagnostics.Concat(filteredDocumentDiagnostics.Values.SelectMany(i => i)));
+			var result = documentDiagnostics.Values.SelectMany(i => i);
+
+			if (projectDiagnostics.Length > 0)
+			{
+				result = projectDiagnostics.Concat(result);
+			}
+
+			return Task.FromResult(result);
 		}
 
 		public override Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
 		{
 			if (document.FilePath != null &&
-				documentDiagnostics.TryGetValue(document.Project.Id, out var projectDocumentDiagnostics) &&
-				projectDocumentDiagnostics.TryGetValue(document.FilePath, out var diagnostics))
+				document.Project.Id == projectId &&
+				documentDiagnostics.TryGetValue(document.FilePath, out var diagnostics))
 			{
 				return Task.FromResult(diagnostics.AsEnumerable());
 			}
@@ -45,15 +53,16 @@ namespace WTG.BulkAnalysis.Core
 
 		public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
 		{
-			if (!projectDiagnostics.TryGetValue(project.Id, out var diagnostics))
+			if (project.Id != projectId)
 			{
 				return Task.FromResult(Enumerable.Empty<Diagnostic>());
 			}
 
-			return Task.FromResult(diagnostics.AsEnumerable());
+			return Task.FromResult(projectDiagnostics.AsEnumerable());
 		}
 
-		readonly ImmutableDictionary<ProjectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>>> documentDiagnostics;
-		readonly ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> projectDiagnostics;
+		readonly ProjectId projectId;
+		readonly ImmutableDictionary<string, ImmutableArray<Diagnostic>> documentDiagnostics;
+		readonly ImmutableArray<Diagnostic> projectDiagnostics;
 	}
 }

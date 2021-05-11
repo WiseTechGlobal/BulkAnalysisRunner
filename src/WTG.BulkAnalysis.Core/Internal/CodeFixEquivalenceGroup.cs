@@ -14,23 +14,22 @@ namespace WTG.BulkAnalysis.Core
 	{
 		CodeFixEquivalenceGroup(
 			string equivalenceKey,
-			Solution solution,
+			Project project,
 			FixAllProvider fixAllProvider,
 			CodeFixProvider codeFixProvider,
-			ImmutableDictionary<ProjectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>>> documentDiagnosticsToFix,
-			ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> projectDiagnosticsToFix)
+			ImmutableDictionary<string, ImmutableArray<Diagnostic>> documentDiagnosticsToFix,
+			ImmutableArray<Diagnostic> projectDiagnosticsToFix)
 		{
 			codeFixEquivalenceKey = equivalenceKey;
-			this.solution = solution;
+			this.project = project;
 			this.fixAllProvider = fixAllProvider;
 			this.codeFixProvider = codeFixProvider;
 			this.documentDiagnosticsToFix = documentDiagnosticsToFix;
 			this.projectDiagnosticsToFix = projectDiagnosticsToFix;
 
 			NumberOfDiagnostics = documentDiagnosticsToFix
-				.SelectMany(x => x.Value)
 				.Sum(y => y.Value.Length)
-				+ projectDiagnosticsToFix.Sum(x => x.Value.Length);
+				+ projectDiagnosticsToFix.Length;
 		}
 
 		public int NumberOfDiagnostics { get; }
@@ -69,10 +68,10 @@ namespace WTG.BulkAnalysis.Core
 				{
 					if (!groupLookup.TryGetValue(key, out var group))
 					{
-						groupLookup.Add(key, group = new Builder(key, project.Solution, fixAllProvider, codeFixProvider));
+						groupLookup.Add(key, group = new Builder(key, project, fixAllProvider, codeFixProvider));
 					}
 
-					group.AddDiagnostic(project.Id, diagnostic);
+					group.AddDiagnostic(diagnostic);
 				}
 			}
 
@@ -83,12 +82,11 @@ namespace WTG.BulkAnalysis.Core
 		{
 			var diagnostic = documentDiagnosticsToFix
 				.Values
-				.SelectMany(i => i.Values)
-				.Concat(projectDiagnosticsToFix.Values)
-				.First()
+				.SelectMany(i => i)
+				.Concat(projectDiagnosticsToFix)
 				.First();
 
-			var document = solution.GetDocument(diagnostic.Location.SourceTree);
+			var document = project.GetDocument(diagnostic.Location.SourceTree);
 
 			if (document == null)
 			{
@@ -98,12 +96,12 @@ namespace WTG.BulkAnalysis.Core
 			var diagnosticIds = new HashSet<string>(
 				documentDiagnosticsToFix
 					.Values
-					.SelectMany(i => i.Values)
-					.Concat(projectDiagnosticsToFix.Values)
 					.SelectMany(i => i)
+					.Concat(projectDiagnosticsToFix)
 					.Select(j => j.Id));
 
 			var diagnosticsProvider = new TesterDiagnosticProvider(
+				project.Id,
 				documentDiagnosticsToFix,
 				projectDiagnosticsToFix);
 
@@ -174,64 +172,52 @@ namespace WTG.BulkAnalysis.Core
 		}
 
 		readonly string codeFixEquivalenceKey;
-		readonly Solution solution;
+		readonly Project project;
 		readonly FixAllProvider fixAllProvider;
 		readonly CodeFixProvider codeFixProvider;
-		readonly ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> projectDiagnosticsToFix;
-		readonly ImmutableDictionary<ProjectId, ImmutableDictionary<string, ImmutableArray<Diagnostic>>> documentDiagnosticsToFix;
+		readonly ImmutableArray<Diagnostic> projectDiagnosticsToFix;
+		readonly ImmutableDictionary<string, ImmutableArray<Diagnostic>> documentDiagnosticsToFix;
 
 		sealed class Builder
 		{
-			public Builder(string equivalenceKey, Solution solution, FixAllProvider fixAllProvider, CodeFixProvider codeFixProvider)
+			public Builder(string equivalenceKey, Project project, FixAllProvider fixAllProvider, CodeFixProvider codeFixProvider)
 			{
 				this.equivalenceKey = equivalenceKey;
-				this.solution = solution;
+				this.project = project;
 				this.fixAllProvider = fixAllProvider;
 				this.codeFixProvider = codeFixProvider;
-				documentDiagnostics = new Dictionary<ProjectId, Dictionary<string, List<Diagnostic>>>();
-				projectDiagnostics = new Dictionary<ProjectId, List<Diagnostic>>();
+				documentDiagnostics = new Dictionary<string, List<Diagnostic>>();
+				projectDiagnostics = new List<Diagnostic>();
 			}
 
-			public void AddDiagnostic(ProjectId projectId, Diagnostic diagnostic)
+			public void AddDiagnostic(Diagnostic diagnostic)
 			{
 				if (diagnostic.Location.IsInSource)
 				{
 					var sourcePath = diagnostic.Location.GetLineSpan().Path;
 
-					if (!documentDiagnostics.TryGetValue(projectId, out var projectDocumentDiagnostics))
-					{
-						projectDocumentDiagnostics = new Dictionary<string, List<Diagnostic>>();
-						documentDiagnostics.Add(projectId, projectDocumentDiagnostics);
-					}
-
-					if (!projectDocumentDiagnostics.TryGetValue(sourcePath, out var diagnosticsInFile))
+					if (!documentDiagnostics.TryGetValue(sourcePath, out var diagnosticsInFile))
 					{
 						diagnosticsInFile = new List<Diagnostic>();
-						projectDocumentDiagnostics.Add(sourcePath, diagnosticsInFile);
+						documentDiagnostics.Add(sourcePath, diagnosticsInFile);
 					}
 
 					diagnosticsInFile.Add(diagnostic);
 				}
 				else
 				{
-					if (!projectDiagnostics.TryGetValue(projectId, out var diagnosticsInProject))
-					{
-						diagnosticsInProject = new List<Diagnostic>();
-						projectDiagnostics.Add(projectId, diagnosticsInProject);
-					}
-
-					diagnosticsInProject.Add(diagnostic);
+					projectDiagnostics.Add(diagnostic);
 				}
 			}
 
 			public CodeFixEquivalenceGroup ToEquivalenceGroup()
 			{
-				var documentDiagnosticsToFix = documentDiagnostics.ToImmutableDictionary(i => i.Key, i => i.Value.ToImmutableDictionary(j => j.Key, j => j.Value.ToImmutableArray(), StringComparer.OrdinalIgnoreCase));
-				var projectDiagnosticsToFix = projectDiagnostics.ToImmutableDictionary(i => i.Key, i => i.Value.ToImmutableArray());
+				var documentDiagnosticsToFix = documentDiagnostics.ToImmutableDictionary(j => j.Key, j => j.Value.ToImmutableArray(), StringComparer.OrdinalIgnoreCase);
+				var projectDiagnosticsToFix = projectDiagnostics.ToImmutableArray();
 
 				return new CodeFixEquivalenceGroup(
 					equivalenceKey,
-					solution,
+					project,
 					fixAllProvider,
 					codeFixProvider,
 					documentDiagnosticsToFix,
@@ -239,11 +225,11 @@ namespace WTG.BulkAnalysis.Core
 			}
 
 			readonly string equivalenceKey;
-			readonly Solution solution;
+			readonly Project project;
 			readonly FixAllProvider fixAllProvider;
 			readonly CodeFixProvider codeFixProvider;
-			readonly Dictionary<ProjectId, Dictionary<string, List<Diagnostic>>> documentDiagnostics;
-			readonly Dictionary<ProjectId, List<Diagnostic>> projectDiagnostics;
+			readonly Dictionary<string, List<Diagnostic>> documentDiagnostics;
+			readonly List<Diagnostic> projectDiagnostics;
 		}
 	}
 }
