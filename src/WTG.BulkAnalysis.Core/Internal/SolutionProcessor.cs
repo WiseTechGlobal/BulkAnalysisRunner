@@ -86,8 +86,8 @@ namespace WTG.BulkAnalysis.Core
 				{
 					var equivalenceGroups = await CodeFixEquivalenceGroup.CreateAsync(
 						provider,
-						diagnostics,
-						solution,
+						pair.Value,
+						project,
 						context.CancellationToken).ConfigureAwait(false);
 
 					foreach (var equivalence in equivalenceGroups)

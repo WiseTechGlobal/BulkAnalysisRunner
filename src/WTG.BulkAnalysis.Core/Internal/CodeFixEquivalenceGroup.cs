@@ -35,7 +35,7 @@ namespace WTG.BulkAnalysis.Core
 
 		public int NumberOfDiagnostics { get; }
 
-		public static async Task<ImmutableArray<CodeFixEquivalenceGroup>> CreateAsync(CodeFixProvider codeFixProvider, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> allDiagnostics, Solution solution, CancellationToken cancellationToken)
+		public static async Task<ImmutableArray<CodeFixEquivalenceGroup>> CreateAsync(CodeFixProvider codeFixProvider, ImmutableArray<Diagnostic> allDiagnostics, Project project, CancellationToken cancellationToken)
 		{
 			var fixAllProvider = codeFixProvider.GetFixAllProvider();
 
@@ -47,35 +47,32 @@ namespace WTG.BulkAnalysis.Core
 			var groupLookup = new Dictionary<string, Builder>();
 			var equivalenceKeys = new HashSet<string>();
 
-			foreach (var projectDiagnostics in allDiagnostics)
+			foreach (var diagnostic in allDiagnostics)
 			{
-				foreach (var diagnostic in projectDiagnostics.Value)
+				if (!codeFixProvider.FixableDiagnosticIds.Contains(diagnostic.Id))
 				{
-					if (!codeFixProvider.FixableDiagnosticIds.Contains(diagnostic.Id))
+					continue;
+				}
+
+				var codeActions = await GetFixesAsync(project, codeFixProvider, diagnostic, cancellationToken).ConfigureAwait(false);
+				equivalenceKeys.Clear();
+
+				foreach (var action in codeActions)
+				{
+					if (action.EquivalenceKey != null)
 					{
-						continue;
+						equivalenceKeys.Add(action.EquivalenceKey);
+					}
+				}
+
+				foreach (var key in equivalenceKeys)
+				{
+					if (!groupLookup.TryGetValue(key, out var group))
+					{
+						groupLookup.Add(key, group = new Builder(key, project.Solution, fixAllProvider, codeFixProvider));
 					}
 
-					var codeActions = await GetFixesAsync(solution, codeFixProvider, diagnostic, cancellationToken).ConfigureAwait(false);
-					equivalenceKeys.Clear();
-
-					foreach (var action in codeActions)
-					{
-						if (action.EquivalenceKey != null)
-						{
-							equivalenceKeys.Add(action.EquivalenceKey);
-						}
-					}
-
-					foreach (var key in equivalenceKeys)
-					{
-						if (!groupLookup.TryGetValue(key, out var group))
-						{
-							groupLookup.Add(key, group = new Builder(key, solution, fixAllProvider, codeFixProvider));
-						}
-
-						group.AddDiagnostic(projectDiagnostics.Key, diagnostic);
-					}
+					group.AddDiagnostic(project.Id, diagnostic);
 				}
 			}
 
@@ -144,9 +141,9 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		static async Task<IEnumerable<CodeAction>> GetFixesAsync(Solution solution, CodeFixProvider codeFixProvider, Diagnostic diagnostic, CancellationToken cancellationToken)
+		static async Task<IEnumerable<CodeAction>> GetFixesAsync(Project project, CodeFixProvider codeFixProvider, Diagnostic diagnostic, CancellationToken cancellationToken)
 		{
-			var document = solution.GetDocument(diagnostic.Location.SourceTree);
+			var document = project.GetDocument(diagnostic.Location.SourceTree);
 
 			if (document == null)
 			{
