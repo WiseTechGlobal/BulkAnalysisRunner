@@ -18,6 +18,7 @@
     <FileVersion>$(Version)</FileVersion>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\build\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
     <WTGAnalyzersWarnAll>true</WTGAnalyzersWarnAll>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
 
     <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
