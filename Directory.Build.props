@@ -17,6 +17,7 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\build\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    <WTGAnalyzersWarnAll>true</WTGAnalyzersWarnAll>
 
     <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
