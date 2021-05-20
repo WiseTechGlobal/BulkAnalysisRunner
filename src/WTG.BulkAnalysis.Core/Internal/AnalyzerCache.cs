@@ -107,11 +107,20 @@ namespace WTG.BulkAnalysis.Core
 
 			static IEnumerable<string> GetAnalyzerRefs(Solution solution)
 			{
-				return solution
-					.Projects
-					.SelectMany(p => p.AnalyzerReferences)
-					.Select(a => a.FullPath)
-					.Distinct(StringComparer.OrdinalIgnoreCase);
+				var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+				foreach (var project in solution.Projects)
+				{
+					foreach (var reference in project.AnalyzerReferences)
+					{
+						if (!string.IsNullOrEmpty(reference.FullPath))
+						{
+							result.Add(reference.FullPath!);
+						}
+					}
+				}
+
+				return result;
 			}
 
 			static IEnumerable<string> Remap(IEnumerable<string> source, string loadDir)

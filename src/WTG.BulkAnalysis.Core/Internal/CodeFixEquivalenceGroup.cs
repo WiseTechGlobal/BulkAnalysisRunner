@@ -45,6 +45,7 @@ namespace WTG.BulkAnalysis.Core
 			}
 
 			var groupLookup = new Dictionary<string, Builder>();
+			var equivalenceKeys = new HashSet<string>();
 
 			foreach (var projectDiagnostics in allDiagnostics)
 			{
@@ -56,8 +57,17 @@ namespace WTG.BulkAnalysis.Core
 					}
 
 					var codeActions = await GetFixesAsync(solution, codeFixProvider, diagnostic, cancellationToken).ConfigureAwait(false);
+					equivalenceKeys.Clear();
 
-					foreach (var key in codeActions.Select(x => x.EquivalenceKey).Distinct())
+					foreach (var action in codeActions)
+					{
+						if (action.EquivalenceKey != null)
+						{
+							equivalenceKeys.Add(action.EquivalenceKey);
+						}
+					}
+
+					foreach (var key in equivalenceKeys)
 					{
 						if (!groupLookup.TryGetValue(key, out var group))
 						{
@@ -82,6 +92,11 @@ namespace WTG.BulkAnalysis.Core
 				.First();
 
 			var document = solution.GetDocument(diagnostic.Location.SourceTree);
+
+			if (document == null)
+			{
+				return ImmutableArray<CodeActionOperation>.Empty;
+			}
 
 			var diagnosticIds = new HashSet<string>(
 				documentDiagnosticsToFix
@@ -131,13 +146,20 @@ namespace WTG.BulkAnalysis.Core
 
 		static async Task<IEnumerable<CodeAction>> GetFixesAsync(Solution solution, CodeFixProvider codeFixProvider, Diagnostic diagnostic, CancellationToken cancellationToken)
 		{
+			var document = solution.GetDocument(diagnostic.Location.SourceTree);
+
+			if (document == null)
+			{
+				return Enumerable.Empty<CodeAction>();
+			}
+
 			var codeActions = new List<CodeAction>();
 			try
 			{
 				await codeFixProvider
 					.RegisterCodeFixesAsync(
 						new CodeFixContext(
-							solution.GetDocument(diagnostic.Location.SourceTree),
+							document,
 							diagnostic,
 							(a, d) => codeActions.Add(a),
 							cancellationToken))
