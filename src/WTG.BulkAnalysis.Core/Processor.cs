@@ -119,7 +119,17 @@ namespace WTG.BulkAnalysis.Core
 
 		static void ConfigureWorkspace(Workspace workspace)
 		{
-			workspace.Options = workspace.Options
+			Solution solution;
+
+			do
+			{
+				solution = workspace.CurrentSolution;
+			}
+			while (!workspace.TryApplyChanges(ConfigureSolution(solution)));
+
+			static Solution ConfigureSolution(Solution solution) => solution.WithOptions(ConfigureOptions(solution.Options));
+
+			static OptionSet ConfigureOptions(OptionSet options) => options
 				.WithChangedOption(UseTabsOptionKey, true)
 				.WithChangedOption(TabSizeOptionKey, 4)
 				.WithChangedOption(IndentationSizeOptionKey, 4);

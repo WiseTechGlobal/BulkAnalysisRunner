@@ -165,6 +165,12 @@ namespace WTG.BulkAnalysis.Core
 				.GetCompilationAsync(context.CancellationToken)
 				.ConfigureAwait(false);
 
+			if (compilation == null)
+			{
+				context.Log.WriteFormatted($"  - Skipping {project.Name} as it does not support compilation.", LogLevel.Warning);
+				return ImmutableArray<Diagnostic>.Empty;
+			}
+
 			var compilationWithAnalyzers = compilation
 				.WithAnalyzers(
 					analyzers,
