@@ -27,15 +27,7 @@ namespace WTG.BulkAnalysis.Core
 			do
 			{
 				var solution = workspace.CurrentSolution;
-				var analyzers = cache.GetAnalyzers(solution);
-
-				if (analyzers.Length == 0)
-				{
-					context.Log.WriteLine("  - No analyzers registered for projects in this solution. Moving on...", LogLevel.Warning);
-					break;
-				}
-
-				var diagnostics = await GetAnalyzerDiagnosticsAsync(solution, analyzers).ConfigureAwait(false);
+				var diagnostics = await GetAnalyzerDiagnosticsAsync(solution, cache).ConfigureAwait(false);
 				var numDiagnostics = diagnostics.Sum(kvp => kvp.Value.Length);
 
 				if (!reported)
@@ -81,40 +73,50 @@ namespace WTG.BulkAnalysis.Core
 		{
 			var count = 0;
 
-			foreach (var provider in GetApplicableFixProviders(solution, diagnostics))
+			foreach (var pair in diagnostics)
 			{
-				var equivalenceGroups = await CodeFixEquivalenceGroup.CreateAsync(
-					provider,
-					diagnostics,
-					solution,
-					context.CancellationToken).ConfigureAwait(false);
+				var project = solution.GetProject(pair.Key);
 
-				foreach (var equivalence in equivalenceGroups)
+				if (project == null)
 				{
-					var operations = await equivalence
-						.GetOperationsAsync(context.CancellationToken)
-						.ConfigureAwait(false);
+					continue;
+				}
 
-					context.Log.WriteFormatted($"  - Applying {operations.Length} operations to resolve {equivalence.NumberOfDiagnostics} errors...", LogLevel.Success);
+				foreach (var provider in GetApplicableFixProviders(project, pair.Value))
+				{
+					var equivalenceGroups = await CodeFixEquivalenceGroup.CreateAsync(
+						provider,
+						pair.Value,
+						project,
+						context.CancellationToken).ConfigureAwait(false);
 
-					var summary = FileChangeSet.Extract(solution, operations);
-					summary?.PreApply(context.VersionControl);
-
-					foreach (var operation in operations)
+					foreach (var equivalence in equivalenceGroups)
 					{
-						operation.Apply(workspace, context.CancellationToken);
+						var operations = await equivalence
+							.GetOperationsAsync(context.CancellationToken)
+							.ConfigureAwait(false);
+
+						context.Log.WriteFormatted($"  - Applying {operations.Length} operations to resolve {equivalence.NumberOfDiagnostics} errors...", LogLevel.Success);
+
+						var summary = FileChangeSet.Extract(solution, operations);
+						summary?.PreApply(context.VersionControl);
+
+						foreach (var operation in operations)
+						{
+							operation.Apply(workspace, context.CancellationToken);
+						}
+
+						summary?.PostApply(context.VersionControl);
+
+						count += operations.Length;
 					}
-
-					summary?.PostApply(context.VersionControl);
-
-					count += operations.Length;
 				}
 			}
 
 			return count;
 		}
 
-		async Task<ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>>> GetAnalyzerDiagnosticsAsync(Solution solution, ImmutableArray<DiagnosticAnalyzer> analyzers)
+		async Task<ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>>> GetAnalyzerDiagnosticsAsync(Solution solution, AnalyzerCache cache)
 		{
 			var projectDiagnosticTasks = new List<KeyValuePair<ProjectId, Task<ImmutableArray<Diagnostic>>>>();
 
@@ -123,6 +125,14 @@ namespace WTG.BulkAnalysis.Core
 				if (project.Language != LanguageNames.CSharp)
 				{
 					context.Log.WriteFormatted($"  - Skipping {project.Name} as it is not a C# project. (Language == '{project.Language}')", LogLevel.Warning);
+					continue;
+				}
+
+				var analyzers = cache.GetAnalyzers(project);
+
+				if (analyzers.Length == 0)
+				{
+					context.Log.WriteLine($"  - Skipping {project.Name} as it has no analyzers registered.", LogLevel.Warning);
 					continue;
 				}
 
@@ -210,12 +220,12 @@ namespace WTG.BulkAnalysis.Core
 			return builder == null ? ImmutableArray<Diagnostic>.Empty : builder.ToImmutable();
 		}
 
-		IEnumerable<CodeFixProvider> GetApplicableFixProviders(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)
+		IEnumerable<CodeFixProvider> GetApplicableFixProviders(Project project, ImmutableArray<Diagnostic> diagnostics)
 		{
-			var codeFixProviders = cache.GetAllCodeFixProviders(solution);
+			var codeFixProviders = cache.GetAllCodeFixProviders(project);
 
 			return diagnostics
-				.SelectMany(x => x.Value.Select(y => y.Id))
+				.Select(y => y.Id)
 				.Distinct()
 				.SelectMany(x => ImmutableDictionary.GetValueOrDefault(codeFixProviders, x, EmptyCodeFixProviderList))
 				.Distinct();

@@ -25,8 +25,8 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		public abstract ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Solution solution);
-		public abstract ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Solution solution);
+		public abstract ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project);
+		public abstract ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project);
 
 		static IEnumerable<T> Get<T>(string assemblyPath, Predicate<T> filter)
 		{
@@ -57,9 +57,9 @@ namespace WTG.BulkAnalysis.Core
 				providerLookup = new ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>>();
 			}
 
-			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Solution solution)
+			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project)
 			{
-				var paths = GetAnalyzerRefs(solution);
+				var paths = GetAnalyzerRefs(project);
 
 				if (!string.IsNullOrEmpty(loadDir))
 				{
@@ -72,9 +72,9 @@ namespace WTG.BulkAnalysis.Core
 					select analyzer);
 			}
 
-			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Solution solution)
+			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project)
 			{
-				var paths = GetAnalyzerRefs(solution);
+				var paths = GetAnalyzerRefs(project);
 
 				if (!string.IsNullOrEmpty(loadDir))
 				{
@@ -105,18 +105,15 @@ namespace WTG.BulkAnalysis.Core
 				return result;
 			}
 
-			static IEnumerable<string> GetAnalyzerRefs(Solution solution)
+			static IEnumerable<string> GetAnalyzerRefs(Project project)
 			{
 				var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-				foreach (var project in solution.Projects)
+				foreach (var reference in project.AnalyzerReferences)
 				{
-					foreach (var reference in project.AnalyzerReferences)
+					if (!string.IsNullOrEmpty(reference.FullPath))
 					{
-						if (!string.IsNullOrEmpty(reference.FullPath))
-						{
-							result.Add(reference.FullPath!);
-						}
+						result.Add(reference.FullPath!);
 					}
 				}
 
@@ -165,8 +162,8 @@ namespace WTG.BulkAnalysis.Core
 					x => x.ToImmutableList());
 			}
 
-			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Solution solution) => analyzers;
-			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Solution solution) => providers;
+			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project) => analyzers;
+			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project) => providers;
 
 			static IEnumerable<string> PrefixPaths(string loadDir, ImmutableArray<string> loadList)
 			{
