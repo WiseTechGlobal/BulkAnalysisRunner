@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.Build.Locator;
 using WTG.BulkAnalysis.Core;
-using WTG.BulkAnalysis.TFS;
 
 namespace WTG.BulkAnalysis.Runner
 {
@@ -51,19 +50,13 @@ namespace WTG.BulkAnalysis.Runner
 			}
 
 			using var reportGenerator = OpenReporter(arguments);
-			using var versionControl = TfsVersionControl.Create(arguments.Path, null);
-
-			if (versionControl == null)
-			{
-				log.WriteLine($"No workspace mapping found for '{arguments.Path}'.", LogLevel.Warning);
-			}
 
 			var sw = new Stopwatch();
 			sw.Start();
 
 			try
 			{
-				var context = NewContext(arguments, reportGenerator, versionControl, log, cancellationToken);
+				var context = NewContext(arguments, reportGenerator, log, cancellationToken);
 				await Processor.ProcessAsync(context).ConfigureAwait(false);
 			}
 			catch (InvalidConfigurationException ex)
@@ -111,11 +104,11 @@ namespace WTG.BulkAnalysis.Runner
 			}
 		}
 
-		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator? reportGenerator, IVersionControl? versionControl, ILog log, CancellationToken cancellationToken)
+		static RunContext NewContext(CommandLineArgs arguments, XmlReportGenerator? reportGenerator, ILog log, CancellationToken cancellationToken)
 		{
 			return new RunContext(
 				SolutionLocator.Locate(arguments.Path, CreateFilter(arguments)),
-				versionControl ?? NullVersionControl.Instance,
+				NullVersionControl.Instance,
 				arguments.Fix,
 				ImmutableHashSet.CreateRange(arguments.RuleIDs),
 				arguments.LoadDir,
