@@ -7,7 +7,6 @@ namespace WTG.BulkAnalysis.Core
 	{
 		public RunContext(
 			ImmutableArray<string> solutionPaths,
-			IVersionControl versionControl,
 			bool applyFixes,
 			ImmutableHashSet<string> ruleIds,
 			string loadDir,
@@ -19,7 +18,6 @@ namespace WTG.BulkAnalysis.Core
 			CancellationToken cancellationToken)
 		{
 			SolutionPaths = solutionPaths;
-			VersionControl = versionControl;
 			ApplyFixes = applyFixes;
 			RuleIds = ruleIds;
 			LoadDir = loadDir;
@@ -32,7 +30,6 @@ namespace WTG.BulkAnalysis.Core
 		}
 
 		public ImmutableArray<string> SolutionPaths { get; }
-		public IVersionControl VersionControl { get; }
 		public bool ApplyFixes { get; }
 		public ImmutableHashSet<string> RuleIds { get; }
 		public string LoadDir { get; }

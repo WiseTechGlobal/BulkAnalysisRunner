@@ -108,7 +108,6 @@ namespace WTG.BulkAnalysis.Runner
 		{
 			return new RunContext(
 				SolutionLocator.Locate(arguments.Path, CreateFilter(arguments)),
-				NullVersionControl.Instance,
 				arguments.Fix,
 				ImmutableHashSet.CreateRange(arguments.RuleIDs),
 				arguments.LoadDir,

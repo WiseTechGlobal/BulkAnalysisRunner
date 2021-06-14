@@ -98,15 +98,10 @@ namespace WTG.BulkAnalysis.Core
 
 						context.Log.WriteFormatted($"  - Applying {operations.Length} operations to resolve {equivalence.NumberOfDiagnostics} errors...", LogLevel.Success);
 
-						var summary = FileChangeSet.Extract(solution, operations);
-						summary?.PreApply(context.VersionControl);
-
 						foreach (var operation in operations)
 						{
 							operation.Apply(workspace, context.CancellationToken);
 						}
-
-						summary?.PostApply(context.VersionControl);
 
 						count += operations.Length;
 					}
