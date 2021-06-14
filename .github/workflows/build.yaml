@@ -1,0 +1,25 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  build:
+    name: Build ${{ matrix.configuration }}
+
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+        configuration: [ Debug, Release ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build BulkAnalysisRunner
+      run: dotnet build src --configuration ${{ matrix.configuration }}
