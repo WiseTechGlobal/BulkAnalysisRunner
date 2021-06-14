@@ -19,7 +19,6 @@ namespace WTG.BulkAnalysis.Runner
 			string loadDir,
 			IEnumerable<string> loadList,
 			string configuration,
-			string tfsServer,
 			bool debug,
 			bool pause)
 		{
@@ -31,7 +30,6 @@ namespace WTG.BulkAnalysis.Runner
 			LoadDir = loadDir;
 			LoadList = loadList;
 			Configuration = configuration;
-			TfsServer = tfsServer;
 			Debug = debug;
 			Pause = pause;
 		}
@@ -59,9 +57,6 @@ namespace WTG.BulkAnalysis.Runner
 
 		[Option("configuration", Required = false, HelpText = "Specifies the configuration to use.", Default = "Debug")]
 		public string Configuration { get; }
-
-		[Option("tfs-server", Required = false, HelpText = "Specifies the tfs server uri. If we cannot identify the workspace from the path, then this server will be used to update the workspace cache before trying again.")]
-		public string TfsServer { get; }
 
 		[Option("debug", Required = false, HelpText = "Include more diagnostic information when the analyzer fails.")]
 		public bool Debug { get; }

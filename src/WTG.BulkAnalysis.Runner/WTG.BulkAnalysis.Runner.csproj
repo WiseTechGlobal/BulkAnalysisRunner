@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WTG.BulkAnalysis.Core\WTG.BulkAnalysis.Core.csproj" />
-    <ProjectReference Include="..\WTG.BulkAnalysis.TFS\WTG.BulkAnalysis.TFS.csproj" />
   </ItemGroup>
 
   <ItemGroup>
