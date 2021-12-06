@@ -33,6 +33,7 @@ namespace WTG.BulkAnalysis.Core
 				if (!reported)
 				{
 					context.Reporter?.Report(solution, diagnostics);
+					reported = true;
 				}
 
 				if (numDiagnostics == 0)
