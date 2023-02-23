@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace WTG.BulkAnalysis.Core
 {
-	struct SolutionProcessor
+	readonly struct SolutionProcessor
 	{
 		public SolutionProcessor(RunContext context, AnalyzerCache cache, Workspace workspace)
 		{
@@ -203,11 +203,7 @@ namespace WTG.BulkAnalysis.Core
 				}
 				else if (ruleIds.Contains(diagnostic.Id))
 				{
-					if (builder == null)
-					{
-						builder = ImmutableArray.CreateBuilder<Diagnostic>();
-					}
-
+					builder ??= ImmutableArray.CreateBuilder<Diagnostic>();
 					builder.Add(diagnostic);
 				}
 			}
