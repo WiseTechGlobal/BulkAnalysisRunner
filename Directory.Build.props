@@ -6,7 +6,7 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>11</LangVersion>
     <Nullable>enable</Nullable>
 
     <Version>4.0.0.0</Version>
