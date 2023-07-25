@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29806.167
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
+MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WTG.BulkAnalysis.Runner", "WTG.BulkAnalysis.Runner\WTG.BulkAnalysis.Runner.csproj", "{CC915472-4531-448B-8D01-9FD9D036D451}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WTG.BulkAnalysis.Core", "WTG.BulkAnalysis.Core\WTG.BulkAnalysis.Core.csproj", "{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WTG.BulkAnalysis.Test", "WTG.BulkAnalysis.Test\WTG.BulkAnalysis.Test.csproj", "{F440B628-0C1E-4C5C-9BDF-EA0D62219678}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,9 @@ Global
 		{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF81C8B4-A10D-4606-801E-D3DD02E1BFBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F440B628-0C1E-4C5C-9BDF-EA0D62219678}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F440B628-0C1E-4C5C-9BDF-EA0D62219678}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F440B628-0C1E-4C5C-9BDF-EA0D62219678}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

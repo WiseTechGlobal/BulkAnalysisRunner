@@ -23,3 +23,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build BulkAnalysisRunner
       run: dotnet build src --configuration ${{ matrix.configuration }}
+    - name: Test BulkAnalysisRunner
+      if: matrix.configuration == 'Debug'
+      run: dotnet test src --configuration ${{ matrix.configuration }}
