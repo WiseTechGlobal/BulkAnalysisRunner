@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>BulkAnalysisRunner.Mcp</AssemblyName>
+    <RootNamespace>WTG.BulkAnalysis.Mcp</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- This is an executable host app; the repo-wide AllEnabledByDefault firehose (make-internal,
+         LoggerMessage delegates, etc.) adds no value here. Use the standard default analyzer set. -->
+    <AnalysisMode>Default</AnalysisMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="1.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.11.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WTG.BulkAnalysis.Core\WTG.BulkAnalysis.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -14,14 +14,20 @@ namespace WTG.BulkAnalysis.Core
 	abstract class AnalyzerCache
 	{
 		public static AnalyzerCache Create(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList)
+			=> Create(diagnosticIds, loadDir, loadList, discoverAll: false);
+
+		public static AnalyzerCache CreateForDiscovery(string loadDir, ImmutableArray<string> loadList)
+			=> Create(ImmutableHashSet<string>.Empty, loadDir, loadList, discoverAll: true);
+
+		static AnalyzerCache Create(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList, bool discoverAll)
 		{
 			if (loadList.Length > 0)
 			{
-				return new Explicit(diagnosticIds, loadDir, loadList);
+				return new Explicit(diagnosticIds, loadDir, loadList, discoverAll);
 			}
 			else
 			{
-				return new Implicit(diagnosticIds, loadDir);
+				return new Implicit(diagnosticIds, loadDir, discoverAll);
 			}
 		}
 
@@ -32,27 +38,55 @@ namespace WTG.BulkAnalysis.Core
 		{
 			var assembly = Assembly.LoadFile(assemblyPath);
 
-			foreach (var type in assembly.GetTypes())
-			{
-				if (!type.IsAbstract && type.IsSubclassOf(typeof(T)))
-				{
-					var instance = (T)Activator.CreateInstance(type);
+			// Discovery loads every referenced analyzer assembly; some may be built against a different
+			// Roslyn version and fail to fully load. Use the types that did load and skip the rest.
+			Type?[] types;
 
-					if (filter(instance))
-					{
-						yield return instance;
-					}
+			try
+			{
+				types = assembly.GetTypes();
+			}
+			catch (ReflectionTypeLoadException ex)
+			{
+				types = ex.Types;
+			}
+
+			var result = new List<T>();
+
+			foreach (var type in types)
+			{
+				if (type == null || type.IsAbstract || !type.IsSubclassOf(typeof(T)))
+				{
+					continue;
+				}
+
+				T instance;
+
+				try
+				{
+					instance = (T)Activator.CreateInstance(type)!;
+				}
+				catch (Exception)
+				{
+					continue;
+				}
+
+				if (filter(instance))
+				{
+					result.Add(instance);
 				}
 			}
+
+			return result;
 		}
 
 		sealed class Implicit : AnalyzerCache
 		{
-			public Implicit(ImmutableHashSet<string> diagnosticIds, string loadDir)
+			public Implicit(ImmutableHashSet<string> diagnosticIds, string loadDir, bool discoverAll)
 			{
 				this.loadDir = loadDir;
-				analyzerFilter = a => a.SupportedDiagnostics.Any(x => diagnosticIds.Contains(x.Id));
-				providerFilter = p => p.FixableDiagnosticIds.Any(diagnosticIds.Contains);
+				analyzerFilter = a => discoverAll || a.SupportedDiagnostics.Any(x => diagnosticIds.Contains(x.Id));
+				providerFilter = p => discoverAll || p.FixableDiagnosticIds.Any(diagnosticIds.Contains);
 				analyzerLookup = new ConcurrentDictionary<string, ImmutableArray<DiagnosticAnalyzer>>();
 				providerLookup = new ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>>();
 			}
@@ -142,10 +176,10 @@ namespace WTG.BulkAnalysis.Core
 
 		sealed class Explicit : AnalyzerCache
 		{
-			public Explicit(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList)
+			public Explicit(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList, bool discoverAll)
 			{
-				Predicate<DiagnosticAnalyzer> analyzerFilter = a => a.SupportedDiagnostics.Any(x => diagnosticIds.Contains(x.Id));
-				Predicate<CodeFixProvider> providerFilter = p => p.FixableDiagnosticIds.Any(diagnosticIds.Contains);
+				Predicate<DiagnosticAnalyzer> analyzerFilter = a => discoverAll || a.SupportedDiagnostics.Any(x => diagnosticIds.Contains(x.Id));
+				Predicate<CodeFixProvider> providerFilter = p => discoverAll || p.FixableDiagnosticIds.Any(diagnosticIds.Contains);
 
 				var paths = PrefixPaths(loadDir, loadList);
 
@@ -155,7 +189,7 @@ namespace WTG.BulkAnalysis.Core
 					from path in paths
 					from provider in Get(path, providerFilter)
 					from id in provider.FixableDiagnosticIds
-					where diagnosticIds.Contains(id)
+					where discoverAll || diagnosticIds.Contains(id)
 					group provider by id into g
 					select g,
 					x => x.Key,

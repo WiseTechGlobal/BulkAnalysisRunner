@@ -1,16 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;net10.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="4.4.0" />
+    <!-- Roslyn 4.7.0 is the last release whose MSBuildWorkspace loads MSBuild IN-PROCESS. 4.8+ uses a
+         separate out-of-process BuildHost that fails to connect when hosted under an stdio MCP server.
+         4.7.0 is also Roslyn 4.x, so analyzers in the wild (WTG.Analyzers, StyleCop, NetAnalyzers) built
+         for Roslyn 4.x run correctly instead of crashing (AD0001) as they do on the 5.x runtime.
+         MSBuildLocator supplies the actual MSBuild from the installed .NET SDK at runtime. -->
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="4.7.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.7.0" />
     <PackageReference Include="StyleCop.Analyzers.Unstable" Version="1.2.0.507">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

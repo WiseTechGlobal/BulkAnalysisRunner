@@ -18,7 +18,7 @@ namespace WTG.BulkAnalysis.Core
 			this.workspace = workspace;
 		}
 
-		public async Task ProcessSolutionAsync()
+		public async Task<int> ProcessSolutionAsync()
 		{
 			var operationsCounter = 0;
 			var numPreviousDiagnostics = 0;
@@ -67,6 +67,8 @@ namespace WTG.BulkAnalysis.Core
 			{
 				context.Log.WriteFormatted($"  - Applied {operationsCounter} fix-all operations to resolve errors.", LogLevel.Info);
 			}
+
+			return operationsCounter;
 		}
 
 		async Task<int> ApplyFixesAsync(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)

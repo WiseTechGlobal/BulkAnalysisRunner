@@ -117,7 +117,7 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		static void ConfigureWorkspace(Workspace workspace)
+		internal static void ConfigureWorkspace(Workspace workspace)
 		{
 			Solution solution;
 
