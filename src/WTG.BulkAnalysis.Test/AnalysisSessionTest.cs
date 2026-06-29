@@ -16,6 +16,11 @@ public class AnalysisSessionTest
 	[Test]
 	public async Task ReportsAFixableRuleInAModernProject()
 	{
+		// SDK analyzer injection for the fixture project only works when the host process is .NET Core/.NET 5+.
+		// On net472, MSBuildWorkspace does not populate AnalyzerReferences with the SDK's bundled analyzers,
+		// so the analysis returns no diagnostics and this assertion would trivially fail.
+		Assume.That(Environment.Version.Major >= 5, "SDK analyzer injection requires a .NET 5+ host process.");
+
 		// The fixture uses a C# 12 collection expression; if the engine's Roslyn were too old to parse
 		// it, analysis would be disrupted and CA1822 would not be found here.
 		var path = CreateFixture(suppressCA1822: false);
