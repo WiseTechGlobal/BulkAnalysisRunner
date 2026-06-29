@@ -31,6 +31,11 @@ protocol's stdout clean — avoid `dotnet run`, which writes build output to std
 dotnet build src/WTG.BulkAnalysis.Mcp -c Release
 ```
 
+Builds use the artifacts output layout, so the server lands at
+`artifacts/bin/WTG.BulkAnalysis.Mcp/release/BulkAnalysisRunner.Mcp.dll` (each project gets its own
+isolated folder). For a standalone deployment, `dotnet publish src/WTG.BulkAnalysis.Mcp -c Release -o
+<dir>` produces a self-contained folder you can point at instead.
+
 ### Claude Code / VS Code (`.mcp.json` or `.vscode/mcp.json`)
 
 ```json
@@ -40,7 +45,7 @@ dotnet build src/WTG.BulkAnalysis.Mcp -c Release
       "type": "stdio",
       "command": "dotnet",
       "args": [
-        "/absolute/path/to/BulkAnalysisRunner/bin/Release/net10.0/BulkAnalysisRunner.Mcp.dll"
+        "/absolute/path/to/BulkAnalysisRunner/artifacts/bin/WTG.BulkAnalysis.Mcp/release/BulkAnalysisRunner.Mcp.dll"
       ]
     }
   }
@@ -53,6 +58,8 @@ for a fixable rule, and `close_analysis` when done.
 ## Requirements & notes
 
 - **.NET 10 SDK** must be installed; the server registers the SDK's MSBuild via `MSBuildLocator`.
-- The engine pins **Roslyn 4.7.0** deliberately — it loads MSBuild in-process (4.8+ uses an
-  out-of-process BuildHost that does not connect under an stdio host) and runs Roslyn-4.x-era
-  analyzers without the AD0001 failures seen on the 5.x runtime. See the project memory for details.
+- The engine uses **Roslyn 5.x** to match the .NET 10 SDK's compiler, so it parses modern C#
+  (e.g. C# 14). The reported diagnostics reflect the project's effective `.editorconfig` / global
+  analyzer config, and `list_diagnostics` defaults to Warning+ to match what a build surfaces.
+- First-time `open_analysis` on a large solution can take a few minutes (MSBuild evaluates the
+  project graph out-of-process); subsequent calls in the same session reuse the loaded workspace.

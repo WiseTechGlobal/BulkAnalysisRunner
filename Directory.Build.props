@@ -8,6 +8,9 @@
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <LangVersion>11</LangVersion>
     <Nullable>enable</Nullable>
+    <!-- Per-project isolated output under artifacts/ (avoids a shared flat bin where projects'
+         differing transitive dependency versions collide). -->
+    <UseArtifactsOutput>true</UseArtifactsOutput>
     <!-- WTG1005 (line-ending consistency) is platform-dependent (uses Environment.NewLine);
          the repo uses CRLF for its Windows CI, so suppress it to allow cross-platform builds. -->
     <NoWarn>$(NoWarn);WTG1005</NoWarn>
@@ -27,7 +30,6 @@
     <WTGAnalyzersWarnAll>true</WTGAnalyzersWarnAll>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
 
-    <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,16 +38,12 @@
     </AdditionalFiles>
   </ItemGroup>
 
-  <!-- Roslyn's Workspaces.MSBuild pulls MSBuild assemblies transitively. MSBuildLocator supplies the
-       real MSBuild from the installed SDK at runtime, so these must NOT be copied to output
-       (ExcludeAssets=runtime, satisfying MSBL001). They are pinned to a patched build to avoid the
-       known vulnerability in the version Roslyn would otherwise select transitively (NU1903). -->
+  <!-- Roslyn's Workspaces.MSBuild (5.x) pulls Microsoft.Build.Framework transitively. MSBuildLocator
+       (and the out-of-process BuildHost) supply the real MSBuild from the installed SDK at runtime, so
+       it must NOT be copied to output (ExcludeAssets=runtime, satisfying MSBuildLocator's MSBL001).
+       Pinned to the version Roslyn 5.3 expects. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="17.14.28" ExcludeAssets="runtime" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="17.14.28" ExcludeAssets="runtime" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.14.28" ExcludeAssets="runtime" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.28" ExcludeAssets="runtime" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.NET.StringTools" Version="17.14.28" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="18.0.2" ExcludeAssets="runtime" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

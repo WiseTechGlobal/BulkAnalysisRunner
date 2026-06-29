@@ -162,8 +162,11 @@ namespace WTG.BulkAnalysis.Core
 
 				var providers = cache.GetAllCodeFixProviders(project);
 
+				// Pass the project's AnalyzerOptions so the analyzer driver honours the project's
+				// .editorconfig and global analyzer config (severities and suppressions) and sees its
+				// AdditionalFiles, matching what the build would report.
 				var diagnostics = await compilation
-					.WithAnalyzers(analyzers, EmptyCompilationWithAnalyzersOptions)
+					.WithAnalyzers(analyzers, CreateAnalyzerOptions(project))
 					.GetAnalyzerDiagnosticsAsync(cancellationToken)
 					.ConfigureAwait(false);
 
@@ -258,10 +261,10 @@ namespace WTG.BulkAnalysis.Core
 		readonly ILog log;
 		readonly SemaphoreSlim gate = new SemaphoreSlim(1, 1);
 
-		static readonly CompilationWithAnalyzersOptions EmptyCompilationWithAnalyzersOptions = new CompilationWithAnalyzersOptions(
-			new AnalyzerOptions(ImmutableArray.Create<AdditionalText>()),
-			null,
-			true,
-			false);
+		static CompilationWithAnalyzersOptions CreateAnalyzerOptions(Project project) => new CompilationWithAnalyzersOptions(
+			project.AnalyzerOptions,
+			onAnalyzerException: null,
+			concurrentAnalysis: true,
+			logAnalyzerExecutionTime: false);
 	}
 }

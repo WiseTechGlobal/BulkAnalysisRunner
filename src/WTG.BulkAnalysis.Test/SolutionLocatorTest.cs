@@ -12,12 +12,12 @@ public class SolutionLocatorTest
 		var solutions = SolutionLocator.Locate(temporaryDirectory, solutionFilter: null);
 
 		Assert.That(
-			solutions.ToArray(),
+			solutions.Select(Normalize).ToArray(),
 			Is.EqualTo(new[]
 			{
 				Path.Combine("src", "BulkAnalysisRunner.sln"),
 				"AnotherSln.sln",
-			}.Select(path => Path.Combine(temporaryDirectory, path))));
+			}.Select(path => Normalize(Path.Combine(temporaryDirectory, path)))));
 	}
 
 	[Test]
@@ -31,11 +31,11 @@ public class SolutionLocatorTest
 		var solutions = SolutionLocator.Locate(subdirPath, solutionFilter: null);
 
 		Assert.That(
-			solutions.ToArray(),
+			solutions.Select(Normalize).ToArray(),
 			Is.EqualTo(new[]
 			{
 				Path.Combine("src", "BulkAnalysisRunner.sln")
-			}.Select(path => Path.Combine(temporaryDirectory, path))));
+			}.Select(path => Normalize(Path.Combine(temporaryDirectory, path)))));
 	}
 
 	[Test]
@@ -64,6 +64,9 @@ public class SolutionLocatorTest
 		var solutions = SolutionLocator.Locate(subdirPath, solutionFilter: null);
 		Assert.That(solutions, Is.Empty);
 	}
+
+	// Build.xml uses Windows-style separators; normalise so the comparison is cross-platform.
+	static string Normalize(string path) => path.Replace('\\', '/');
 
 	IFileProvider fileProvider;
 	string temporaryDirectory;

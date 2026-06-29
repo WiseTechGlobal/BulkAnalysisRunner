@@ -70,12 +70,14 @@ namespace WTG.BulkAnalysis.Mcp
 
 		[McpServerTool(Name = "list_diagnostics")]
 		[Description("Run all analyzers and return a grouped summary of the diagnostics. Each group reports its count " +
-			"and whether a code fix provider is available (hasCodeFix), so you can tell what is bulk-fixable.")]
+			"and whether a code fix provider is available (hasCodeFix), so you can tell what is bulk-fixable. " +
+			"By default only Warning and Error are returned (what a build surfaces); pass minSeverity to include " +
+			"lower-severity (Info/Hidden) suggestions.")]
 		public static async Task<ListDiagnosticsResult> ListDiagnosticsAsync(
 			SessionManager sessions,
 			[Description("Session id from open_analysis.")] string sessionId,
 			[Description("Optional ';'-separated rule ids to limit the results to.")] string? ruleIds = null,
-			[Description("Optional minimum severity: Hidden, Info, Warning or Error.")] string? minSeverity = null,
+			[Description("Minimum severity: Hidden, Info, Warning or Error. Defaults to Warning (build-actionable).")] string minSeverity = "Warning",
 			[Description("How to group results: rule (default), severity, project or fixability.")] string groupBy = "rule",
 			CancellationToken cancellationToken = default)
 		{
