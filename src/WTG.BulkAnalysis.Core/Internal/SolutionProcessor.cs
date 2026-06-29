@@ -18,7 +18,7 @@ namespace WTG.BulkAnalysis.Core
 			this.workspace = workspace;
 		}
 
-		public async Task ProcessSolutionAsync()
+		public async Task<int> ProcessSolutionAsync()
 		{
 			var operationsCounter = 0;
 			var numPreviousDiagnostics = 0;
@@ -67,6 +67,8 @@ namespace WTG.BulkAnalysis.Core
 			{
 				context.Log.WriteFormatted($"  - Applied {operationsCounter} fix-all operations to resolve errors.", LogLevel.Info);
 			}
+
+			return operationsCounter;
 		}
 
 		async Task<int> ApplyFixesAsync(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)
@@ -176,10 +178,16 @@ namespace WTG.BulkAnalysis.Core
 				return ImmutableArray<Diagnostic>.Empty;
 			}
 
+			// Pass the project's AnalyzerOptions so editorconfig / global analyzer config severities and
+			// suppressions (and AdditionalFiles) are honoured, matching the build's effective results.
 			var compilationWithAnalyzers = compilation
 				.WithAnalyzers(
 					analyzers,
-					EmptyCompilationWithAnalyzersOptions);
+					new CompilationWithAnalyzersOptions(
+						project.AnalyzerOptions,
+						onAnalyzerException: null,
+						concurrentAnalysis: true,
+						logAnalyzerExecutionTime: false));
 
 			var diagnostics = await compilationWithAnalyzers
 				.GetAllDiagnosticsAsync(context.CancellationToken)
@@ -223,12 +231,6 @@ namespace WTG.BulkAnalysis.Core
 		}
 
 		static readonly ImmutableList<CodeFixProvider> EmptyCodeFixProviderList = ImmutableList.Create<CodeFixProvider>();
-
-		static readonly CompilationWithAnalyzersOptions EmptyCompilationWithAnalyzersOptions = new CompilationWithAnalyzersOptions(
-			new AnalyzerOptions(ImmutableArray.Create<AdditionalText>()),
-			null,
-			true,
-			false);
 
 		readonly RunContext context;
 		readonly AnalyzerCache cache;

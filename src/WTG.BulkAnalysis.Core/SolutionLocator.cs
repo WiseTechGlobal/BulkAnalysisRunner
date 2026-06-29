@@ -48,12 +48,14 @@ namespace WTG.BulkAnalysis.Core
 					throw new InvalidConfigurationException("Directory does not exist, '" + pathToBranch + "'.");
 				}
 
-				pathToBranch = Path.GetDirectoryName(pathToBranch);
+				var parent = Path.GetDirectoryName(pathToBranch);
 
-				if (pathToBranch == null)
+				if (parent == null)
 				{
 					throw new InvalidConfigurationException("Build.xml could be found.");
 				}
+
+				pathToBranch = parent;
 			}
 		}
 
@@ -77,6 +79,7 @@ namespace WTG.BulkAnalysis.Core
 				throw new InvalidConfigurationException("Error reading '" + path + "': Invalid root element.");
 			}
 
+			// Build.xml stores Windows-style separators; normalise so paths resolve on any platform.
 			return
 				from solutionsElement in root.Elements()
 				where solutionsElement.Name.LocalName == "Solutions"
@@ -84,7 +87,7 @@ namespace WTG.BulkAnalysis.Core
 				where solutionElement.Name.LocalName == "Solution"
 				let filename = solutionElement.Attribute("Filename")?.Value
 				where filename != null
-				select filename;
+				select filename.Replace('\\', Path.DirectorySeparatorChar);
 		}
 
 		static bool IsPathPrefix(string path, string prefix)

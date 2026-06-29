@@ -1,5 +1,7 @@
 using System;
+#if NETFRAMEWORK
 using System.Runtime.Serialization;
+#endif
 
 namespace WTG.BulkAnalysis.Core
 {
@@ -20,9 +22,11 @@ namespace WTG.BulkAnalysis.Core
 		{
 		}
 
+#if NETFRAMEWORK
 		protected CodeFixException(SerializationInfo serializationInfo, StreamingContext streamingContext)
 			: base(serializationInfo, streamingContext)
 		{
 		}
+#endif
 	}
 }

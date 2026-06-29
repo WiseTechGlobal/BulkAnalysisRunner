@@ -8,6 +8,16 @@
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <LangVersion>11</LangVersion>
     <Nullable>enable</Nullable>
+    <!-- Per-project isolated output under artifacts/ (avoids a shared flat bin where projects'
+         differing transitive dependency versions collide). -->
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <!-- WTG1005 (line-ending consistency) is platform-dependent (uses Environment.NewLine);
+         the repo uses CRLF for its Windows CI, so suppress it to allow cross-platform builds. -->
+    <NoWarn>$(NoWarn);WTG1005</NoWarn>
+    <!-- Audit only our direct dependencies. The Roslyn/MSBuild tooling tree pulls transitive
+         packages (compile-time only; excluded from runtime) whose advisories we cannot control
+         and which would otherwise fail the build via TreatWarningsAsErrors. -->
+    <NuGetAuditMode>direct</NuGetAuditMode>
 
     <Version>4.0.0.0</Version>
 
@@ -20,7 +30,6 @@
     <WTGAnalyzersWarnAll>true</WTGAnalyzersWarnAll>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
 
-    <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,4 +37,13 @@
       <Link>Properties\stylecop.json</Link>
     </AdditionalFiles>
   </ItemGroup>
+
+  <!-- Roslyn's Workspaces.MSBuild (5.x) pulls Microsoft.Build.Framework transitively. MSBuildLocator
+       (and the out-of-process BuildHost) supply the real MSBuild from the installed SDK at runtime, so
+       it must NOT be copied to output (ExcludeAssets=runtime, satisfying MSBuildLocator's MSBL001).
+       Pinned to the version Roslyn 5.3 expects. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" Version="18.0.2" ExcludeAssets="runtime" PrivateAssets="all" />
+  </ItemGroup>
+
 </Project>
