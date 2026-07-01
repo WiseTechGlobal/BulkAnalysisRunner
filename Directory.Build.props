@@ -19,6 +19,7 @@
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\build\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
     <WTGAnalyzersWarnAll>true</WTGAnalyzersWarnAll>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
 
     <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
