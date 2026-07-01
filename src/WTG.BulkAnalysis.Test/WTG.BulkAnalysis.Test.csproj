@@ -5,6 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <!--
+      This project hosts a fixture DiagnosticAnalyzer (AnalyzerCacheTest.SampleAnalyzer) that is
+      loaded by AnalyzerCache during tests, not shipped as a compiler extension. The analyzer
+      packaging/design rules therefore don't apply.
+    -->
+    <NoWarn>$(NoWarn);RS1036;RS1038;RS1041;RS2008</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,8 +20,6 @@ namespace WTG.BulkAnalysis.Runner
 			{
 				return;
 			}
-
-			AppDomain.CurrentDomain.AssemblyResolve += OnAppDomainAssemblyResolve;
 
 			using var cts = new CancellationTokenSource();
 
@@ -139,19 +135,6 @@ namespace WTG.BulkAnalysis.Runner
 			}
 
 			return ((Parsed<CommandLineArgs>)parseResult).Value;
-		}
-
-		static Assembly? OnAppDomainAssemblyResolve(object sender, ResolveEventArgs args)
-		{
-			if (args.RequestingAssembly == null)
-			{
-				return null;
-			}
-
-			var requesterPath = new Uri(args.RequestingAssembly.CodeBase, UriKind.Absolute).LocalPath;
-			var directory = Path.GetDirectoryName(requesterPath);
-			var assemblyPath = Path.Combine(directory, new AssemblyName(args.Name).Name + ".dll");
-			return Assembly.LoadFile(assemblyPath);
 		}
 
 		static Func<string, bool>? CreateFilter(CommandLineArgs arguments)
