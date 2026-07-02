@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace WTG.BulkAnalysis.Core
 {
-	abstract class AnalyzerCache
+	public abstract class AnalyzerCache
 	{
 		protected AnalyzerCache(ImmutableHashSet<string> diagnosticIds, ILog log)
 		{
@@ -23,6 +23,14 @@ namespace WTG.BulkAnalysis.Core
 			referenceCache = new ConcurrentDictionary<string, AnalyzerFileReference>(StringComparer.OrdinalIgnoreCase);
 			subscribed = new HashSet<AnalyzerFileReference>();
 		}
+
+		readonly ImmutableHashSet<string> diagnosticIds;
+		readonly ILog log;
+		readonly Predicate<DiagnosticAnalyzer> analyzerFilter;
+		readonly Predicate<CodeFixProvider> providerFilter;
+		readonly ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>> providerLookup;
+		readonly ConcurrentDictionary<string, AnalyzerFileReference> referenceCache;
+		readonly HashSet<AnalyzerFileReference> subscribed;
 
 		public static AnalyzerCache Create(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList, ILog log)
 		{
@@ -45,21 +53,11 @@ namespace WTG.BulkAnalysis.Core
 			{
 				EnsureSubscribed(reference);
 
-				// Let Roslyn's own analyzer loader resolve the analyzer and its dependencies.
-				// It binds the analyzer against the compiler assemblies already loaded in this
-				// process and reports unloadable analyzers via AnalyzerLoadFailed instead of
-				// throwing - so we never have to reflect over the assembly ourselves.
-				var analyzers = language == null
-					? reference.GetAnalyzersForAllLanguages()
-					: reference.GetAnalyzers(language);
+				var analyzers = language is not null
+					? reference.GetAnalyzers(language)
+					: reference.GetAnalyzersForAllLanguages();
 
-				foreach (var analyzer in analyzers)
-				{
-					if (analyzerFilter(analyzer))
-					{
-						builder.Add(analyzer);
-					}
-				}
+				builder.AddRange(analyzers.Where(a => analyzerFilter(a)));
 			}
 
 			return builder.ToImmutable();
@@ -107,10 +105,6 @@ namespace WTG.BulkAnalysis.Core
 		{
 			var builder = ImmutableArray.CreateBuilder<CodeFixProvider>();
 
-			// Roslyn has no discovery API for code fix providers, so we reflect over the
-			// assembly. We use the reference's own GetAssembly() rather than a fresh
-			// Assembly.LoadFile so the code fixes bind against the same, already-loaded copy
-			// Roslyn used for the analyzers.
 			foreach (var type in GetLoadableTypes(reference))
 			{
 				if (!type.IsAbstract && type.IsSubclassOf(typeof(CodeFixProvider)))
@@ -127,7 +121,7 @@ namespace WTG.BulkAnalysis.Core
 			return builder.ToImmutable();
 		}
 
-		Type[] GetLoadableTypes(AnalyzerFileReference reference)
+		IEnumerable<Type> GetLoadableTypes(AnalyzerFileReference reference)
 		{
 			Assembly assembly;
 
@@ -138,7 +132,7 @@ namespace WTG.BulkAnalysis.Core
 			catch (Exception ex)
 			{
 				log.WriteFormatted($"  - Unable to load code fixes from '{reference.FullPath}': {ex.Message}", LogLevel.Warning);
-				return Array.Empty<Type>();
+				return [];
 			}
 
 			try
@@ -169,14 +163,6 @@ namespace WTG.BulkAnalysis.Core
 			var suffix = string.IsNullOrEmpty(detail) ? string.Empty : $": {detail}";
 			log.WriteFormatted($"  - Skipping an analyzer in '{path}' ({e.ErrorCode}){suffix}", LogLevel.Warning);
 		}
-
-		readonly ImmutableHashSet<string> diagnosticIds;
-		readonly ILog log;
-		readonly Predicate<DiagnosticAnalyzer> analyzerFilter;
-		readonly Predicate<CodeFixProvider> providerFilter;
-		readonly ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>> providerLookup;
-		readonly ConcurrentDictionary<string, AnalyzerFileReference> referenceCache;
-		readonly HashSet<AnalyzerFileReference> subscribed;
 
 		sealed class Implicit : AnalyzerCache
 		{
