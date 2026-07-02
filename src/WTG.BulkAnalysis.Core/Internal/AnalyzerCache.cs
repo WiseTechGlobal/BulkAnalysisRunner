@@ -44,12 +44,14 @@ namespace WTG.BulkAnalysis.Core
 			}
 		}
 
-		public ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project)
+		public abstract ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project);
+		public abstract ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project);
+
+		protected ImmutableArray<DiagnosticAnalyzer> CollectAnalyzers(IEnumerable<AnalyzerFileReference> references, string? language)
 		{
-			var language = GetLanguage(project);
 			var builder = ImmutableArray.CreateBuilder<DiagnosticAnalyzer>();
 
-			foreach (var reference in GetReferences(project))
+			foreach (var reference in references)
 			{
 				EnsureSubscribed(reference);
 
@@ -63,10 +65,10 @@ namespace WTG.BulkAnalysis.Core
 			return builder.ToImmutable();
 		}
 
-		public ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project)
+		protected ImmutableDictionary<string, ImmutableList<CodeFixProvider>> CollectCodeFixProviders(IEnumerable<AnalyzerFileReference> references)
 		{
 			return ImmutableDictionary.ToImmutableDictionary(
-				from reference in GetReferences(project)
+				from reference in references
 				from provider in GetCodeFixProviders(reference)
 				from id in provider.FixableDiagnosticIds
 				where diagnosticIds.Contains(id)
@@ -76,27 +78,8 @@ namespace WTG.BulkAnalysis.Core
 				x => x.ToImmutableList());
 		}
 
-		protected static IAnalyzerAssemblyLoader GetLoader(Project project)
-		{
-			// Reuse the assembly loader the workspace configured for this project's analyzer
-			// references, so assemblies we load from an alternate location share the same
-			// dependency-resolution behaviour.
-			foreach (var reference in project.AnalyzerReferences)
-			{
-				if (reference is AnalyzerFileReference fileReference)
-				{
-					return fileReference.AssemblyLoader;
-				}
-			}
-
-			return FallbackAssemblyLoader.Instance;
-		}
-
 		protected AnalyzerFileReference GetOrCreateReference(string path, IAnalyzerAssemblyLoader loader)
 			=> referenceCache.GetOrAdd(path, p => new AnalyzerFileReference(p, loader));
-
-		protected abstract IEnumerable<AnalyzerFileReference> GetReferences(Project project);
-		protected abstract string? GetLanguage(Project project);
 
 		ImmutableArray<CodeFixProvider> GetCodeFixProviders(AnalyzerFileReference reference)
 			=> providerLookup.GetOrAdd(reference.FullPath, key => LoadCodeFixProviders(reference));
@@ -172,9 +155,13 @@ namespace WTG.BulkAnalysis.Core
 				this.loadDir = loadDir;
 			}
 
-			protected override string? GetLanguage(Project project) => project.Language;
+			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project)
+				=> CollectAnalyzers(GetReferences(project), project.Language);
 
-			protected override IEnumerable<AnalyzerFileReference> GetReferences(Project project)
+			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project)
+				=> CollectCodeFixProviders(GetReferences(project));
+
+			IEnumerable<AnalyzerFileReference> GetReferences(Project project)
 			{
 				if (string.IsNullOrEmpty(loadDir))
 				{
@@ -186,9 +173,7 @@ namespace WTG.BulkAnalysis.Core
 
 			IEnumerable<AnalyzerFileReference> Remap(Project project, string loadDir)
 			{
-				var loader = GetLoader(project);
-
-				foreach (var reference in project.AnalyzerReferences)
+				foreach (var reference in project.AnalyzerReferences.OfType<AnalyzerFileReference>())
 				{
 					if (string.IsNullOrEmpty(reference.FullPath))
 					{
@@ -199,6 +184,8 @@ namespace WTG.BulkAnalysis.Core
 
 					if (File.Exists(proposal))
 					{
+						var loader = reference.AssemblyLoader;
+						loader.AddDependencyLocation(proposal);
 						yield return GetOrCreateReference(proposal, loader);
 					}
 				}
@@ -212,17 +199,19 @@ namespace WTG.BulkAnalysis.Core
 			public Explicit(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList, ILog log)
 				: base(diagnosticIds, log)
 			{
-				paths = PrefixPaths(loadDir, loadList).ToImmutableArray();
+				// The explicit load list stands alone rather than tracking a project, so resolve it up
+				// front. There is no project reference to borrow a loader from, and no project language,
+				// so use the fallback loader and ask each reference for analyzers across all languages.
+				var references = PrefixPaths(loadDir, loadList)
+					.Select(path => GetOrCreateReference(path, FallbackAssemblyLoader.Instance))
+					.ToImmutableArray();
+
+				analyzers = CollectAnalyzers(references, language: null);
+				providers = CollectCodeFixProviders(references);
 			}
 
-			// No project context, so ask each reference for analyzers across all languages.
-			protected override string? GetLanguage(Project project) => null;
-
-			protected override IEnumerable<AnalyzerFileReference> GetReferences(Project project)
-			{
-				var loader = GetLoader(project);
-				return paths.Select(path => GetOrCreateReference(path, loader));
-			}
+			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project) => analyzers;
+			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project) => providers;
 
 			static IEnumerable<string> PrefixPaths(string loadDir, ImmutableArray<string> loadList)
 			{
@@ -236,7 +225,8 @@ namespace WTG.BulkAnalysis.Core
 				return paths;
 			}
 
-			readonly ImmutableArray<string> paths;
+			readonly ImmutableArray<DiagnosticAnalyzer> analyzers;
+			readonly ImmutableDictionary<string, ImmutableList<CodeFixProvider>> providers;
 		}
 
 		sealed class FallbackAssemblyLoader : IAnalyzerAssemblyLoader
