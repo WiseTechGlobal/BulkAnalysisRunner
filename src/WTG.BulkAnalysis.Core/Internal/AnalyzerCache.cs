@@ -199,9 +199,6 @@ namespace WTG.BulkAnalysis.Core
 			public Explicit(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList, ILog log)
 				: base(diagnosticIds, log)
 			{
-				// The explicit load list stands alone rather than tracking a project, so resolve it up
-				// front. There is no project reference to borrow a loader from, and no project language,
-				// so use the fallback loader and ask each reference for analyzers across all languages.
 				var references = PrefixPaths(loadDir, loadList)
 					.Select(path => GetOrCreateReference(path, FallbackAssemblyLoader.Instance))
 					.ToImmutableArray();
