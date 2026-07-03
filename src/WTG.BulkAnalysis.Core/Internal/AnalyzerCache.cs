@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace WTG.BulkAnalysis.Core
 {
-	public abstract class AnalyzerCache
+	abstract class AnalyzerCache
 	{
 		protected AnalyzerCache(ImmutableHashSet<string> diagnosticIds, ILog log)
 		{
