@@ -20,8 +20,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/setup-dotnet@v5
     - uses: actions/checkout@v2
+    - uses: actions/setup-dotnet@v5
     - name: Build BulkAnalysisRunner
       run: dotnet build src --configuration ${{ matrix.configuration }}
     - name: Test BulkAnalysisRunner
