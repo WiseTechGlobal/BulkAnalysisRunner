@@ -5,3 +5,9 @@ dotnet_diagnostic.RS1036.severity = none
 dotnet_diagnostic.RS1038.severity = none
 dotnet_diagnostic.RS1041.severity = none
 dotnet_diagnostic.RS2008.severity = none
+
+# 'TypeName' is an internal class that is apparently never instantiated
+# This is firing on NUnit types, which the runner does instantiate.
+# We could make them public, but that would conflict with CA1515, which
+# tells us to make application types internal.
+dotnet_diagnostic.CA1812.severity = none

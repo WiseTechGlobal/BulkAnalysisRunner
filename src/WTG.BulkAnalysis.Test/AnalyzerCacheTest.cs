@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -6,7 +5,7 @@ using WTG.BulkAnalysis.Core;
 
 namespace WTG.BulkAnalysis.Test;
 
-public class AnalyzerCacheTest
+sealed class AnalyzerCacheTest
 {
 	[Test]
 	public void LoadsAnalyzersFromAssembly()
@@ -62,7 +61,7 @@ public class AnalyzerCacheTest
 }
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed class SampleAnalyzer : DiagnosticAnalyzer
+sealed class SampleAnalyzer : DiagnosticAnalyzer
 {
 	public const string DiagnosticId = "WTGTEST01";
 

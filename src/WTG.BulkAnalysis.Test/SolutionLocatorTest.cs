@@ -3,7 +3,7 @@ using WTG.BulkAnalysis.Core;
 
 namespace WTG.BulkAnalysis.Test;
 
-public class SolutionLocatorTest
+sealed class SolutionLocatorTest
 {
 	[Test]
 	public void ReadsSolutionListFromBuildXml()

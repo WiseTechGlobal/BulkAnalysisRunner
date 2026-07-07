@@ -48,14 +48,7 @@ namespace WTG.BulkAnalysis.Core
 					throw new InvalidConfigurationException("Directory does not exist, '" + pathToBranch + "'.");
 				}
 
-				var parent = Path.GetDirectoryName(pathToBranch);
-
-				if (parent == null)
-				{
-					throw new InvalidConfigurationException("Build.xml could be found.");
-				}
-
-				pathToBranch = parent;
+				pathToBranch = Path.GetDirectoryName(pathToBranch) ?? throw new InvalidConfigurationException("Build.xml could be found.");
 			}
 		}
 
