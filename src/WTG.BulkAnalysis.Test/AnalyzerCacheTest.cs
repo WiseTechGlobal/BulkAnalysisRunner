@@ -13,7 +13,10 @@ public class AnalyzerCacheTest
 	{
 		var cache = CreateCache(SampleAnalyzer.DiagnosticId);
 
-		var analyzers = cache.GetAnalyzers(CreateProject());
+		using var workspace = new AdhocWorkspace();
+		var project = workspace.AddProject("Sample", LanguageNames.CSharp);
+
+		var analyzers = cache.GetAnalyzers(project);
 
 		Assert.That(analyzers.Select(a => a.GetType()), Has.Member(typeof(SampleAnalyzer)));
 	}
@@ -23,7 +26,10 @@ public class AnalyzerCacheTest
 	{
 		var cache = CreateCache("SomeOtherIdThatNothingSupports");
 
-		var analyzers = cache.GetAnalyzers(CreateProject());
+		using var workspace = new AdhocWorkspace();
+		var project = workspace.AddProject("Sample", LanguageNames.CSharp);
+
+		var analyzers = cache.GetAnalyzers(project);
 
 		Assert.That(analyzers.Select(a => a.GetType()), Has.No.Member(typeof(SampleAnalyzer)));
 	}
@@ -35,12 +41,6 @@ public class AnalyzerCacheTest
 			loadDir: string.Empty,
 			loadList: ImmutableArray.Create(typeof(AnalyzerCacheTest).Assembly.Location),
 			log: NullLog.Instance);
-	}
-
-	static Project CreateProject()
-	{
-		var workspace = new AdhocWorkspace();
-		return workspace.AddProject("Sample", LanguageNames.CSharp);
 	}
 
 	sealed class NullLog : ILog
@@ -59,26 +59,28 @@ public class AnalyzerCacheTest
 		{
 		}
 	}
+}
 
-	[DiagnosticAnalyzer(LanguageNames.CSharp)]
-	public sealed class SampleAnalyzer : DiagnosticAnalyzer
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
+public sealed class SampleAnalyzer : DiagnosticAnalyzer
+{
+	public const string DiagnosticId = "WTGTEST01";
+
+	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+
+	public override void Initialize(AnalysisContext context)
 	{
-		public const string DiagnosticId = "WTGTEST01";
+		ArgumentNullException.ThrowIfNull(context);
 
-		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
-
-		public override void Initialize(AnalysisContext context)
-		{
-			context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-			context.EnableConcurrentExecution();
-		}
-
-		static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
-			DiagnosticId,
-			"Sample",
-			"Sample",
-			"Test",
-			DiagnosticSeverity.Warning,
-			isEnabledByDefault: true);
+		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+		context.EnableConcurrentExecution();
 	}
+
+	static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
+		DiagnosticId,
+		"Sample",
+		"Sample",
+		"Test",
+		DiagnosticSeverity.Warning,
+		isEnabledByDefault: true);
 }

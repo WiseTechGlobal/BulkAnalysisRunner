@@ -1,9 +1,7 @@
-﻿using System;
-using System.Runtime.Serialization;
+using System;
 
 namespace WTG.BulkAnalysis.Core
 {
-	[Serializable]
 	public class InvalidConfigurationException : Exception
 	{
 		public InvalidConfigurationException()
@@ -17,11 +15,6 @@ namespace WTG.BulkAnalysis.Core
 
 		public InvalidConfigurationException(string message, Exception innerException)
 			: base(message, innerException)
-		{
-		}
-
-		protected InvalidConfigurationException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
 		{
 		}
 	}

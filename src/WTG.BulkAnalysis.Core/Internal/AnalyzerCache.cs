@@ -92,7 +92,7 @@ namespace WTG.BulkAnalysis.Core
 			{
 				if (!type.IsAbstract && type.IsSubclassOf(typeof(CodeFixProvider)))
 				{
-					var provider = (CodeFixProvider)Activator.CreateInstance(type);
+					var provider = (CodeFixProvider)Activator.CreateInstance(type)!;
 
 					if (providerFilter(provider))
 					{
@@ -104,7 +104,7 @@ namespace WTG.BulkAnalysis.Core
 			return builder.ToImmutable();
 		}
 
-		IEnumerable<Type> GetLoadableTypes(AnalyzerFileReference reference)
+		Type[] GetLoadableTypes(AnalyzerFileReference reference)
 		{
 			Assembly assembly;
 

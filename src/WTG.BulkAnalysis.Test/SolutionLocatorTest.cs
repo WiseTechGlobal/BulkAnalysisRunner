@@ -65,7 +65,7 @@ public class SolutionLocatorTest
 		Assert.That(solutions, Is.Empty);
 	}
 
-	IFileProvider fileProvider;
+	EmbeddedFileProvider fileProvider;
 	string temporaryDirectory;
 
 	void WriteFile(string sourcePath, string destinationPath)

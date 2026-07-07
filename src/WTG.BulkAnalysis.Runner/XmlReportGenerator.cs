@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -38,10 +39,7 @@ namespace WTG.BulkAnalysis.Runner
 
 		public void Report(Solution solution, ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>> diagnostics)
 		{
-			if (writer == null)
-			{
-				throw new ObjectDisposedException(nameof(XmlReportGenerator));
-			}
+			ObjectDisposedException.ThrowIf(writer is null, this);
 
 			lock (writer)
 			{
@@ -125,7 +123,7 @@ namespace WTG.BulkAnalysis.Runner
 			var span = location.GetLineSpan();
 			writer.WriteAttributeString("from", FormatPosition(span.StartLinePosition));
 			writer.WriteAttributeString("to", FormatPosition(span.EndLinePosition));
-			writer.WriteAttributeString("message", diagnostic.GetMessage());
+			writer.WriteAttributeString("message", diagnostic.GetMessage(CultureInfo.CurrentCulture));
 			writer.WriteEndElement();
 		}
 

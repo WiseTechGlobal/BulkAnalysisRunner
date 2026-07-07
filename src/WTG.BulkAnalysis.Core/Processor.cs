@@ -15,10 +15,7 @@ namespace WTG.BulkAnalysis.Core
 	{
 		public static async Task ProcessAsync(RunContext context)
 		{
-			if (context == null)
-			{
-				throw new ArgumentNullException(nameof(context));
-			}
+			ArgumentNullException.ThrowIfNull(context);
 
 			context.Log.WriteLine("Rule IDs:");
 

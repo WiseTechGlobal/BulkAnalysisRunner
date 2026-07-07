@@ -198,7 +198,7 @@ namespace WTG.BulkAnalysis.Core
 					}
 					else
 					{
-						context.Log.WriteLine(diagnostic.GetMessage(), LogLevel.Error);
+						context.Log.WriteLine(diagnostic.GetMessage(CultureInfo.CurrentCulture), LogLevel.Error);
 					}
 				}
 				else if (ruleIds.Contains(diagnostic.Id))
