@@ -13,153 +13,198 @@ namespace WTG.BulkAnalysis.Core
 {
 	abstract class AnalyzerCache
 	{
-		public static AnalyzerCache Create(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList)
+		protected AnalyzerCache(ImmutableHashSet<string> diagnosticIds, ILog log)
+		{
+			this.diagnosticIds = diagnosticIds;
+			this.log = log;
+			analyzerFilter = a => a.SupportedDiagnostics.Any(x => diagnosticIds.Contains(x.Id));
+			providerFilter = p => p.FixableDiagnosticIds.Any(diagnosticIds.Contains);
+			providerLookup = new ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>>();
+			referenceCache = new ConcurrentDictionary<string, AnalyzerFileReference>(StringComparer.OrdinalIgnoreCase);
+			subscribed = new HashSet<AnalyzerFileReference>();
+		}
+
+		readonly ImmutableHashSet<string> diagnosticIds;
+		readonly ILog log;
+		readonly Predicate<DiagnosticAnalyzer> analyzerFilter;
+		readonly Predicate<CodeFixProvider> providerFilter;
+		readonly ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>> providerLookup;
+		readonly ConcurrentDictionary<string, AnalyzerFileReference> referenceCache;
+		readonly HashSet<AnalyzerFileReference> subscribed;
+
+		public static AnalyzerCache Create(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList, ILog log)
 		{
 			if (loadList.Length > 0)
 			{
-				return new Explicit(diagnosticIds, loadDir, loadList);
+				return new Explicit(diagnosticIds, loadDir, loadList, log);
 			}
 			else
 			{
-				return new Implicit(diagnosticIds, loadDir);
+				return new Implicit(diagnosticIds, loadDir, log);
 			}
 		}
 
 		public abstract ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project);
 		public abstract ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project);
 
-		static IEnumerable<T> Get<T>(string assemblyPath, Predicate<T> filter)
+		protected ImmutableArray<DiagnosticAnalyzer> CollectAnalyzers(IEnumerable<AnalyzerFileReference> references, string? language)
 		{
-			var assembly = Assembly.LoadFile(assemblyPath);
+			var builder = ImmutableArray.CreateBuilder<DiagnosticAnalyzer>();
 
-			foreach (var type in assembly.GetTypes())
+			foreach (var reference in references)
 			{
-				if (!type.IsAbstract && type.IsSubclassOf(typeof(T)))
-				{
-					var instance = (T)Activator.CreateInstance(type);
+				EnsureSubscribed(reference);
 
-					if (filter(instance))
+				var analyzers = language is not null
+					? reference.GetAnalyzers(language)
+					: reference.GetAnalyzersForAllLanguages();
+
+				builder.AddRange(analyzers.Where(a => analyzerFilter(a)));
+			}
+
+			return builder.ToImmutable();
+		}
+
+		protected ImmutableDictionary<string, ImmutableList<CodeFixProvider>> CollectCodeFixProviders(IEnumerable<AnalyzerFileReference> references)
+		{
+			return ImmutableDictionary.ToImmutableDictionary(
+				from reference in references
+				from provider in GetCodeFixProviders(reference)
+				from id in provider.FixableDiagnosticIds
+				where diagnosticIds.Contains(id)
+				group provider by id into g
+				select g,
+				x => x.Key,
+				x => x.ToImmutableList());
+		}
+
+		protected AnalyzerFileReference GetOrCreateReference(string path, IAnalyzerAssemblyLoader loader)
+			=> referenceCache.GetOrAdd(path, p => new AnalyzerFileReference(p, loader));
+
+		ImmutableArray<CodeFixProvider> GetCodeFixProviders(AnalyzerFileReference reference)
+			=> providerLookup.GetOrAdd(reference.FullPath, key => LoadCodeFixProviders(reference));
+
+		ImmutableArray<CodeFixProvider> LoadCodeFixProviders(AnalyzerFileReference reference)
+		{
+			var builder = ImmutableArray.CreateBuilder<CodeFixProvider>();
+
+			foreach (var type in GetLoadableTypes(reference))
+			{
+				if (!type.IsAbstract && type.IsSubclassOf(typeof(CodeFixProvider)))
+				{
+					var provider = (CodeFixProvider)Activator.CreateInstance(type);
+
+					if (providerFilter(provider))
 					{
-						yield return instance;
+						builder.Add(provider);
 					}
 				}
 			}
+
+			return builder.ToImmutable();
+		}
+
+		IEnumerable<Type> GetLoadableTypes(AnalyzerFileReference reference)
+		{
+			Assembly assembly;
+
+			try
+			{
+				assembly = reference.GetAssembly();
+			}
+			catch (Exception ex)
+			{
+				log.WriteFormatted($"  - Unable to load code fixes from '{reference.FullPath}': {ex.Message}", LogLevel.Warning);
+				return [];
+			}
+
+			try
+			{
+				return assembly.GetTypes();
+			}
+			catch (ReflectionTypeLoadException ex)
+			{
+				// A provider whose dependencies can't be resolved appears as a null entry here;
+				// keep the types that did load. This mirrors how Roslyn's AnalyzerFileReference
+				// tolerates partial load failures when enumerating analyzers.
+				return ex.Types.Where(t => t != null).ToArray()!;
+			}
+		}
+
+		void EnsureSubscribed(AnalyzerFileReference reference)
+		{
+			if (subscribed.Add(reference))
+			{
+				reference.AnalyzerLoadFailed += OnAnalyzerLoadFailed;
+			}
+		}
+
+		void OnAnalyzerLoadFailed(object? sender, AnalyzerLoadFailureEventArgs e)
+		{
+			var path = (sender as AnalyzerFileReference)?.FullPath;
+			var detail = string.IsNullOrEmpty(e.Message) ? e.Exception?.Message : e.Message;
+			var suffix = string.IsNullOrEmpty(detail) ? string.Empty : $": {detail}";
+			log.WriteFormatted($"  - Skipping an analyzer in '{path}' ({e.ErrorCode}){suffix}", LogLevel.Warning);
 		}
 
 		sealed class Implicit : AnalyzerCache
 		{
-			public Implicit(ImmutableHashSet<string> diagnosticIds, string loadDir)
+			public Implicit(ImmutableHashSet<string> diagnosticIds, string loadDir, ILog log)
+				: base(diagnosticIds, log)
 			{
 				this.loadDir = loadDir;
-				analyzerFilter = a => a.SupportedDiagnostics.Any(x => diagnosticIds.Contains(x.Id));
-				providerFilter = p => p.FixableDiagnosticIds.Any(diagnosticIds.Contains);
-				analyzerLookup = new ConcurrentDictionary<string, ImmutableArray<DiagnosticAnalyzer>>();
-				providerLookup = new ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>>();
 			}
 
 			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project)
-			{
-				var paths = GetAnalyzerRefs(project);
-
-				if (!string.IsNullOrEmpty(loadDir))
-				{
-					paths = Remap(paths, loadDir);
-				}
-
-				return ImmutableArray.CreateRange(
-					from analyzerRef in paths
-					from analyzer in GetAnalyzers(analyzerRef)
-					select analyzer);
-			}
+				=> CollectAnalyzers(GetReferences(project), project.Language);
 
 			public override ImmutableDictionary<string, ImmutableList<CodeFixProvider>> GetAllCodeFixProviders(Project project)
-			{
-				var paths = GetAnalyzerRefs(project);
+				=> CollectCodeFixProviders(GetReferences(project));
 
-				if (!string.IsNullOrEmpty(loadDir))
+			IEnumerable<AnalyzerFileReference> GetReferences(Project project)
+			{
+				if (string.IsNullOrEmpty(loadDir))
 				{
-					paths = Remap(paths, loadDir);
+					return project.AnalyzerReferences.OfType<AnalyzerFileReference>();
 				}
 
-				return ImmutableDictionary.ToImmutableDictionary(
-					from analyzerRef in paths
-					from codeFixProvider in GetCodeFixProviders(analyzerRef)
-					from diagnosticId in codeFixProvider.FixableDiagnosticIds
-					group codeFixProvider by diagnosticId into g
-					select g,
-					x => x.Key,
-					x => x.ToImmutableList());
+				return Remap(project, loadDir);
 			}
 
-			ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(string assemblyName) => GetCached(assemblyName, analyzerLookup, analyzerFilter);
-			ImmutableArray<CodeFixProvider> GetCodeFixProviders(string assemblyName) => GetCached(assemblyName, providerLookup, providerFilter);
-
-			static ImmutableArray<T> GetCached<T>(string assemblyName, ConcurrentDictionary<string, ImmutableArray<T>> lookup, Predicate<T> filter)
+			IEnumerable<AnalyzerFileReference> Remap(Project project, string loadDir)
 			{
-				if (!lookup.TryGetValue(assemblyName, out var result))
+				foreach (var reference in project.AnalyzerReferences.OfType<AnalyzerFileReference>())
 				{
-					result = Get(assemblyName, filter).ToImmutableArray();
-					result = lookup.GetOrAdd(assemblyName, result);
-				}
-
-				return result;
-			}
-
-			static IEnumerable<string> GetAnalyzerRefs(Project project)
-			{
-				var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-				foreach (var reference in project.AnalyzerReferences)
-				{
-					if (!string.IsNullOrEmpty(reference.FullPath))
+					if (string.IsNullOrEmpty(reference.FullPath))
 					{
-						result.Add(reference.FullPath!);
+						continue;
 					}
-				}
 
-				return result;
-			}
-
-			static IEnumerable<string> Remap(IEnumerable<string> source, string loadDir)
-			{
-				foreach (var item in source)
-				{
-					var proposal = Path.Combine(loadDir, Path.GetFileName(item));
+					var proposal = Path.Combine(loadDir, Path.GetFileName(reference.FullPath));
 
 					if (File.Exists(proposal))
 					{
-						yield return proposal;
+						var loader = reference.AssemblyLoader;
+						loader.AddDependencyLocation(proposal);
+						yield return GetOrCreateReference(proposal, loader);
 					}
 				}
 			}
 
 			readonly string loadDir;
-			readonly Predicate<DiagnosticAnalyzer> analyzerFilter;
-			readonly Predicate<CodeFixProvider> providerFilter;
-			readonly ConcurrentDictionary<string, ImmutableArray<DiagnosticAnalyzer>> analyzerLookup;
-			readonly ConcurrentDictionary<string, ImmutableArray<CodeFixProvider>> providerLookup;
 		}
 
 		sealed class Explicit : AnalyzerCache
 		{
-			public Explicit(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList)
+			public Explicit(ImmutableHashSet<string> diagnosticIds, string loadDir, ImmutableArray<string> loadList, ILog log)
+				: base(diagnosticIds, log)
 			{
-				Predicate<DiagnosticAnalyzer> analyzerFilter = a => a.SupportedDiagnostics.Any(x => diagnosticIds.Contains(x.Id));
-				Predicate<CodeFixProvider> providerFilter = p => p.FixableDiagnosticIds.Any(diagnosticIds.Contains);
+				var references = PrefixPaths(loadDir, loadList)
+					.Select(path => GetOrCreateReference(path, FallbackAssemblyLoader.Instance))
+					.ToImmutableArray();
 
-				var paths = PrefixPaths(loadDir, loadList);
-
-				analyzers = paths.SelectMany(x => Get(x, analyzerFilter)).ToImmutableArray();
-
-				providers = ImmutableDictionary.ToImmutableDictionary(
-					from path in paths
-					from provider in Get(path, providerFilter)
-					from id in provider.FixableDiagnosticIds
-					where diagnosticIds.Contains(id)
-					group provider by id into g
-					select g,
-					x => x.Key,
-					x => x.ToImmutableList());
+				analyzers = CollectAnalyzers(references, language: null);
+				providers = CollectCodeFixProviders(references);
 			}
 
 			public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Project project) => analyzers;
@@ -179,6 +224,17 @@ namespace WTG.BulkAnalysis.Core
 
 			readonly ImmutableArray<DiagnosticAnalyzer> analyzers;
 			readonly ImmutableDictionary<string, ImmutableList<CodeFixProvider>> providers;
+		}
+
+		sealed class FallbackAssemblyLoader : IAnalyzerAssemblyLoader
+		{
+			public static readonly FallbackAssemblyLoader Instance = new FallbackAssemblyLoader();
+
+			public void AddDependencyLocation(string fullPath)
+			{
+			}
+
+			public Assembly LoadFromPath(string fullPath) => Assembly.LoadFrom(fullPath);
 		}
 	}
 }

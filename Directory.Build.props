@@ -6,7 +6,7 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <LangVersion>11</LangVersion>
+    <LangVersion>12</LangVersion>
     <Nullable>enable</Nullable>
 
     <Version>4.0.0.0</Version>
@@ -19,6 +19,7 @@
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\build\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
     <WTGAnalyzersWarnAll>true</WTGAnalyzersWarnAll>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
 
     <OutputPath>$(MSBuildThisFileDirectory)bin</OutputPath>
   </PropertyGroup>
